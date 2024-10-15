@@ -128,13 +128,16 @@ private:
 	wxPanel* AtmDepositAnimation;
 	*/
 
-	wxButton* cancelWithdrawButton;
-	wxButton* cancelDepositButton;
 	wxButton* cancelRegisterButton;
-	wxButton* cancelMainButton;
-
+	wxButton* cancelInitialDepositButon;
+	wxButton* cancelMainMenuButton;
+	wxButton* cancelDepositButton;
+	wxButton* cancelWithdrawButton;
+	wxButton* cancelFundTransfer;
+	wxButton* cancelAccountSettingsButton;
 	wxButton* cancelChangeAccInfoButton;
 	wxButton* cancelChangePinButton;
+
 	void OnCancelMainMenuClicked(wxCommandEvent& evt);
 
 	void ShowAccountInfo(const Account& account);

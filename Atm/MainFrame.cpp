@@ -24,7 +24,7 @@ void MainFrame::CreateControls()
 	registerBday->SetHint("Enter Birthdate");
 	registerContact = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(200, 40));
 	registerContact->SetHint("Enter Contact Number");
-	registerPin = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40));
+	registerPin = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), wxTE_PASSWORD);
 	registerPin->SetHint("Enter Pin");
 	registerAccButton = new wxButton(registerPanel, wxID_ANY, "Confirm", wxPoint(320, 300), wxSize(120, 35));
 
@@ -32,7 +32,7 @@ void MainFrame::CreateControls()
 	enterAccountPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
 	enterAccNum = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(200, 40));
 	enterAccNum->SetHint("Enter Account Number");
-	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40));
+	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), wxTE_PASSWORD);
 	enterPin->SetHint("Enter Pin");
 	enterAccButton = new wxButton(enterAccountPanel, wxID_ANY, "Confirm", wxPoint(320, 300), wxSize(120, 35));
 	enterAccountPanel->Hide();
@@ -44,7 +44,7 @@ void MainFrame::CreateControls()
 	fundTransferButton = new wxButton(mainPanel, wxID_ANY, "FUND TRANSFER", wxPoint(150, 200), wxSize(120, 35));
 	withdrawButton = new wxButton(mainPanel, wxID_ANY, "WITHDRAW", wxPoint(350, 100), wxSize(120, 35));
 	accountSettingsButton = new wxButton(mainPanel, wxID_ANY, "ACCOUNT", wxPoint(350, 150), wxSize(120, 35));
-	cancelMainButton = new wxButton(mainPanel, wxID_ANY, "CANCEL", wxPoint(350, 200), wxSize(120, 35));
+	cancelMainMenuButton = new wxButton(mainPanel, wxID_ANY, "CANCEL", wxPoint(350, 200), wxSize(120, 35));
 	mainPanel->Hide();
 
 	//Balance Inquiry
@@ -172,7 +172,14 @@ void MainFrame::AddInformation()
 	else {
 		atm.registerAcc(d);
 		ShowAccountInfo(d);
+
 		registerPanel->Hide();
+
+		registerName->Clear();
+		registerBday->Clear();
+		registerContact->Clear();
+		registerPin->Clear();
+
 		enterAccountPanel->Show();
 		Layout();
 	}
@@ -209,6 +216,8 @@ void MainFrame::EnterAccount()
 
 	if (enter == 1) {
 		enterAccountPanel->Hide();
+		enterAccNum->Clear();
+		enterPin->Clear();
 		mainPanel->Show();
 		Layout();
 	}
@@ -263,6 +272,7 @@ void MainFrame::AddMoney()
 	if (amount >= 0) {
 		atm.deposit(amount);
 		wxLogMessage("Deposit Successful");
+		inputDeposit->Clear();
 	}
 	else {
 		wxLogMessage("Invalid Amount");
@@ -296,6 +306,7 @@ void MainFrame::WithdrawMoney()
 		if (amount <= currentBalance) {
 			atm.withdraw(amount);
 			wxLogMessage("Withdraw Successful");
+			inputWithdraw->Clear();
 		}
 	}
 
@@ -343,6 +354,8 @@ void MainFrame::TransferMoney()
 
 		else if (successfulTransfer == 1) {
 			fundTransferPanel->Hide();
+			inputAccTransfer->Clear();
+			inputAmountTransfer->Clear();
 			mainPanel->Show();
 			Layout();
 		}
@@ -390,16 +403,19 @@ void MainFrame::UpdateInformation()
 	if (!changeNameInput->IsEmpty()) {
 		string newAccName = changeNameInput->GetValue().ToStdString();
 		atm.changeAccName(newAccName);
+		changeNameInput->Clear();
 	}
 
 	if (!changeBdayInput->IsEmpty()) {
 		string newAccBday = changeBdayInput->GetValue().ToStdString();
 		atm.changeAccBday(newAccBday);
+		changeBdayInput->Clear();
 	}
 
 	if (!changeContactInput->IsEmpty()) {
 		string newAccContact = changeContactInput->GetValue().ToStdString();
 		atm.changeAccContact(newAccContact);
+		changeContactInput->Clear();
 	}
 
 }
@@ -432,6 +448,9 @@ void MainFrame::UpdatePin()
 
 		if (confirm == 1) {
 			changePinPanel->Hide();
+			inputCurrentPin->Clear();
+			inputNewPin->Clear();
+			inputConfirmNewPin->Clear();
 			mainPanel->Show();
 			Layout();
 		}
