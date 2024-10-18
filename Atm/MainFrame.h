@@ -12,7 +12,11 @@ private:
 	void CreateControls();
 	void BindEventHandlers();
 	void OnWindowClosed(wxCloseEvent& evt);
-	
+	void OnScreenClicked(wxMouseEvent& evt);
+	void OnlyNumInput(wxKeyEvent& evt);
+	void NameInput(wxCommandEvent& evt);
+	wxPanel* noOperationPanel;
+
 	//Register Account
 	void OnRegisterButtonClicked(wxCommandEvent& evt);
 	void AddInformation();
@@ -20,8 +24,29 @@ private:
 	wxPanel* registerPanel;
 	wxStaticText* showAccNumber;
 	wxTextCtrl* registerName;
-	wxTextCtrl* registerBday;
+
+	int GetCurrentYear();
+	int GetDaysInMonth(long month, long year);
+
+	string StoreBday(long month, long day, long year);
+
+	bool ValidateDate(long month, long day, long year);
+
+	void OnInputMonth(wxCommandEvent& evt);
+	void OnMonthFocusLost(wxFocusEvent& evt);
+
+	void OnInputDay(wxCommandEvent& evt);
+	void OnDayFocusLost(wxFocusEvent& evt);
+
+	void OnInputYear(wxCommandEvent& evt);
+
+	wxTextCtrl* registerBirthMonth;
+	wxTextCtrl* registerBirthDay;
+	wxTextCtrl* registerBirthYear;
+	
 	wxTextCtrl* registerContact;
+	void OnInputContact(wxCommandEvent& evt);
+
 	wxTextCtrl* registerPin;
 	wxButton* registerAccButton;
 	
@@ -128,20 +153,39 @@ private:
 	wxPanel* AtmDepositAnimation;
 	*/
 
+	//Cancel Buttons
 	wxButton* cancelRegisterButton;
-	wxButton* cancelInitialDepositButon;
-	wxButton* cancelMainMenuButton;
-	wxButton* cancelDepositButton;
-	wxButton* cancelWithdrawButton;
-	wxButton* cancelFundTransfer;
-	wxButton* cancelAccountSettingsButton;
-	wxButton* cancelChangeAccInfoButton;
-	wxButton* cancelChangePinButton;
+	void OnCancelRegisterClicked(wxCommandEvent& evt);
 
+	wxButton* cancelEnterAccountButton;
+	void OnCancelEnterAccClicked(wxCommandEvent& evt);
+
+	wxButton* cancelMainMenuButton;
 	void OnCancelMainMenuClicked(wxCommandEvent& evt);
+
+	wxButton* cancelDepositButton;
+	void OnCancelDepositClicked(wxCommandEvent& evt);
+
+	wxButton* cancelWithdrawButton;
+	void OnCancelWithdrawClicked(wxCommandEvent& evt);
+
+	wxButton* cancelFundTransferButton;
+	void OnCancelFundTransferClicked(wxCommandEvent& evt);
+
+	wxButton* cancelAccountSettingsButton;
+	void OnCancelAccSettingsClicked(wxCommandEvent& evt);
+
+	wxButton* cancelChangeAccInfoButton;
+	void OnCancelChangeAccInfoClicked(wxCommandEvent& evt);
+
+	wxButton* cancelChangePinButton;
+	void OnCancelChangePinClicked(wxCommandEvent& evt);
+
 
 	void ShowAccountInfo(const Account& account);
 
+	wxButton* cancelInitialDepositButon;//no initial deposit yet
+	void OnCancelInitialDepositClicked(wxCommandEvent& evt);
 
 };
 

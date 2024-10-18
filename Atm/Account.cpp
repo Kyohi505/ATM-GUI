@@ -117,7 +117,7 @@ void AtmSystem::storeAcc()
 	std::ofstream file("pinCode.txt");
 
 	while (p != NULL) {
-		file << p->data.name << " " << p->data.bday << " " << p->data.contact << " "
+		file << p->data.name << "\n" << p->data.bday << " " << p->data.contact << " "
 			<< p->data.balance << " " << p->data.accNum << " " << p->data.pinCode << '\n';
 
 		p = p->next;
@@ -132,7 +132,10 @@ void AtmSystem::loadAcc()
 	std::ifstream file("pinCode.txt");
 	Account d;
 
-	while (file >> d.name >> d.bday >> d.contact >> d.balance >> d.accNum >> d.pinCode) {
+	while (std::getline(file, d.name)) {
+
+		file >> d.bday >> d.contact >> d.balance >> d.accNum >> d.pinCode;
+		file.ignore();
 
 		Node* p, * q, * newNode;
 		p = q = head;
@@ -142,6 +145,7 @@ void AtmSystem::loadAcc()
 			q = p;
 			p = p->next;
 		}
+
 		if (p == head)
 			head = newNode;
 		else
