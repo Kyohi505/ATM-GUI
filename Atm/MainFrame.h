@@ -28,24 +28,33 @@ private:
 	int GetCurrentYear();
 	int GetDaysInMonth(long month, long year);
 
+	void OnInputRegisterPin(wxCommandEvent& evt);
+	void OnValidatePin(wxTextCtrl* inputPin);
+
 	string StoreBday(long month, long day, long year);
 
-	bool ValidateDate(long month, long day, long year);
+	void OnInputRegisterMonth(wxCommandEvent& evt);
+	bool OnValidateMonth(wxTextCtrl* monthInput, wxTextCtrl* dayInput);
+	void OnRegisterMonthFocusLost(wxFocusEvent& evt);
+	void FormatMonthOnFocusLost(wxTextCtrl* monthInput);
 
-	void OnInputMonth(wxCommandEvent& evt);
-	void OnMonthFocusLost(wxFocusEvent& evt);
+	void OnInputRegisterDay(wxCommandEvent& evt);
+	bool OnValidateDay(wxTextCtrl* monthInput, wxTextCtrl* dayInput, wxTextCtrl* yearInput);
+	void OnRegisterDayFocusLost(wxFocusEvent& evt);
+	void FormatDayOnFocusLost(wxTextCtrl* dayInput);
 
-	void OnInputDay(wxCommandEvent& evt);
-	void OnDayFocusLost(wxFocusEvent& evt);
-
-	void OnInputYear(wxCommandEvent& evt);
+	void OnInputRegisterYear(wxCommandEvent& evt);
+	bool OnValidateYear(wxTextCtrl* monthInput, wxTextCtrl* dayInput, wxTextCtrl* yearInput);
+	void OnRegisterYearFocusLost(wxFocusEvent& evt);
+	void FormatYearOnFocusLost(wxTextCtrl* yearInput);
 
 	wxTextCtrl* registerBirthMonth;
 	wxTextCtrl* registerBirthDay;
 	wxTextCtrl* registerBirthYear;
 	
 	wxTextCtrl* registerContact;
-	void OnInputContact(wxCommandEvent& evt);
+	void OnInputRegisterContact(wxCommandEvent& evt);
+	void OnValidateContact(wxTextCtrl* contactInput);
 
 	wxTextCtrl* registerPin;
 	wxButton* registerAccButton;
@@ -127,8 +136,23 @@ private:
 	wxStaticText* printContact;
 
 	wxTextCtrl* changeNameInput;
-	wxTextCtrl* changeBdayInput;
+
+	wxTextCtrl* changeMonthInput;
+	wxTextCtrl* changeDayInput;
+	wxTextCtrl* changeYearInput;
+
+	void OnChangeBirthMonth(wxCommandEvent& evt);
+	void OnChangeMonthFocusLost(wxFocusEvent& evt);
+
+	void OnChangeBirthDay(wxCommandEvent& evt);
+	void OnChangeDayFocusLost(wxFocusEvent& evt);
+
+	void OnChangeBirthYear(wxCommandEvent& evt);
+	void OnChangeYearFocusLost(wxFocusEvent& evt);
+	
 	wxTextCtrl* changeContactInput;
+	void OnChangeContact(wxCommandEvent& evt);
+
 	wxButton* confirmInfoChangeButton;
 
 	//Change Pin
@@ -138,20 +162,13 @@ private:
 
 	wxPanel* changePinPanel;
 	wxButton* confirmPinChangeButton;
+
 	wxTextCtrl* inputCurrentPin;
 	wxTextCtrl* inputNewPin;
 	wxTextCtrl* inputConfirmNewPin;
-	
-	//ReviewMoneyScreen
-	wxPanel* reviewAddedBalance;
-	wxPanel* reviewWithdrawnMoney;
-
-	/*Animations
-	wxPanel* AtmOpeningAnimation;
-	wxPanel* DefaultAtmAnimation;
-	wxPanel* AtmWithdrawAnimation;
-	wxPanel* AtmDepositAnimation;
-	*/
+	void OnInputCurrentPin(wxCommandEvent& evt);
+	void OnInputNewPin(wxCommandEvent& evt);
+	void OnInputConfirmPin(wxCommandEvent& evt);
 
 	//Cancel Buttons
 	wxButton* cancelRegisterButton;
@@ -181,11 +198,43 @@ private:
 	wxButton* cancelChangePinButton;
 	void OnCancelChangePinClicked(wxCommandEvent& evt);
 
-
+	//show acc after register
+	wxPanel* ShowAccountInfoPanel;
 	void ShowAccountInfo(const Account& account);
 
-	wxButton* cancelInitialDepositButon;//no initial deposit yet
+	//Initial Deposit
+	wxPanel* initialDepositPanel;
+	wxTextCtrl* inputInitialDeposit;
+	wxButton* confirmInitialDepositButton;
+	wxButton* cancelInitialDepositButton;
+	void OnConfirmInitialDepositClicked(wxCommandEvent& evt);
 	void OnCancelInitialDepositClicked(wxCommandEvent& evt);
+
+	//ReviewMoneyScreen
+	wxPanel* reviewDepositBalancePanel;
+	wxButton* exitReviewDepositButton;
+	wxStaticText* PrintDepositedAmount;
+	wxStaticText* PrintAfterDepositBalance;
+	void OnExitReviewDepositClicked(wxCommandEvent& evt);
+
+	wxPanel* reviewWithdrawnMoneyPanel;
+	wxButton* exitReviewWithdrawnButton;
+	wxStaticText* PrintWithdrawnAmount;
+	wxStaticText* PrintAfterWithdrawBalance;
+	void OnExitReviewWithdrawnClicked(wxCommandEvent& evt);
+
+	wxPanel* reviewTransferedMoneyPanel;
+	wxButton* exitReviewTransferedButton;
+	wxStaticText* PrintTransferedAmount;
+	wxStaticText* PrintAfterTransferBalance;
+	void OnExitReviewTransferedClicked(wxCommandEvent& evt);
+
+	/*Animations
+	wxPanel* AtmOpeningAnimation;
+	wxPanel* DefaultAtmAnimation;
+	wxPanel* AtmWithdrawAnimation;
+	wxPanel* AtmDepositAnimation;
+	*/
 
 };
 

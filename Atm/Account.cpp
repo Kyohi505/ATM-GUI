@@ -47,6 +47,16 @@ void AtmSystem::registerAcc(Account x)
 	}
 }
 
+int AtmSystem::initialDeposit(double x) {
+
+	if (x < 5000) {
+		return 1;
+	}
+	if (x > 5000) {
+		return 0;
+	}
+}
+
 int AtmSystem::enterAcc(string num, string pin)
 {
 	Node* p = head;

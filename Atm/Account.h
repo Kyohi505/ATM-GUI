@@ -33,21 +33,20 @@ public:
 	int enterAcc(string num, string pin);
 	int createAccNumber();
 	double getBalance();
+	int initialDeposit(double x);
 	void deposit(double x);
 	void withdraw(double x);
-
 	int fundTransfer(string x, double y);
 
 	void changeAccName(string x);
 	void changeAccBday(string x);
 	void changeAccContact(string x);
 	int changeAccPin(string currentPin, string newPin, string confirmedPin);
+	
 	string getAccName();
 	string getAccBday();
 	string getAccContact();
 	string getAccPin();
-
-	//int initialDeposit(double x);
 
 	void storeAcc();
 	void loadAcc();
