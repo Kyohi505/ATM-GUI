@@ -47,12 +47,12 @@ void AtmSystem::registerAcc(Account x)
 	}
 }
 
-int AtmSystem::initialDeposit(double x) {
+int AtmSystem::confirmInitialDeposit(double x) {
 
 	if (x < 5000) {
-		return 1;
+		return -1;
 	}
-	if (x > 5000) {
+	if (x >= 5000) {
 		return 0;
 	}
 }

@@ -9,6 +9,9 @@ public:
 	AtmSystem atm;
 
 private:
+	
+	Account d;
+
 	void CreateControls();
 	void BindEventHandlers();
 	void OnWindowClosed(wxCloseEvent& evt);
@@ -59,6 +62,15 @@ private:
 	wxTextCtrl* registerPin;
 	wxButton* registerAccButton;
 	
+	//Initial Deposit
+	wxPanel* initialDepositPanel;
+	wxTextCtrl* inputInitialDeposit;
+	wxButton* confirmInitialDepositButton;
+	wxButton* cancelInitialDepositButton;
+	void ConfirmInitialDeposit();
+	void OnConfirmInitialDepositClicked(wxCommandEvent& evt);
+	void OnCancelInitialDepositClicked(wxCommandEvent& evt);
+
 
 	//Enter Account NUmber and Pin
 	void EnterAccount();
@@ -202,13 +214,6 @@ private:
 	wxPanel* ShowAccountInfoPanel;
 	void ShowAccountInfo(const Account& account);
 
-	//Initial Deposit
-	wxPanel* initialDepositPanel;
-	wxTextCtrl* inputInitialDeposit;
-	wxButton* confirmInitialDepositButton;
-	wxButton* cancelInitialDepositButton;
-	void OnConfirmInitialDepositClicked(wxCommandEvent& evt);
-	void OnCancelInitialDepositClicked(wxCommandEvent& evt);
 
 	//ReviewMoneyScreen
 	wxPanel* reviewDepositBalancePanel;

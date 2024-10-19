@@ -33,7 +33,7 @@ public:
 	int enterAcc(string num, string pin);
 	int createAccNumber();
 	double getBalance();
-	int initialDeposit(double x);
+	int confirmInitialDeposit(double x);
 	void deposit(double x);
 	void withdraw(double x);
 	int fundTransfer(string x, double y);

@@ -52,10 +52,10 @@ void MainFrame::CreateControls()
 
 	//Initial Deposit Before Complete Register
 	initialDepositPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	inputInitialDeposit = new wxTextCtrl();(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputInitialDeposit->SetHint("0.00");
 	confirmInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Confirm", wxPoint(300, 300), wxSize(120, 35));
-	cancelInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Cancel", wxPoint(400, 300), wxSize(120, 35));
+	cancelInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Cancel", wxPoint(450, 300), wxSize(120, 35));
 	initialDepositPanel->Hide();
 
 	registerAccButton = new wxButton(registerPanel, wxID_ANY, "Confirm", wxPoint(320, 300), wxSize(120, 35));
@@ -211,6 +211,10 @@ void MainFrame::BindEventHandlers()
 	registerPin->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	registerPin->Bind(wxEVT_TEXT, &MainFrame::OnInputRegisterPin, this);
 
+	//Initial Deposit
+	confirmInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmInitialDepositClicked, this);
+	cancelInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelInitialDepositClicked, this);
+
 	//Enter Acc Binds
 	enterAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnEnterAccButtonClicked, this);
 	cancelEnterAccountButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelEnterAccClicked, this);
@@ -333,7 +337,6 @@ void MainFrame::OnValidatePin(wxTextCtrl* inputPin)
 
 void MainFrame::AddInformation()
 {
-	Account d;
 	d.accNum = std::to_string(atm.createAccNumber());
 
 	if (registerName->IsEmpty() || registerBirthMonth->IsEmpty() || registerBirthDay->IsEmpty() || registerBirthYear->IsEmpty()
@@ -374,10 +377,9 @@ void MainFrame::AddInformation()
 
 	if (!(registerName->IsEmpty() && registerBirthMonth->IsEmpty() && registerBirthDay->IsEmpty() && registerBirthYear->IsEmpty()
 		&& registerContact->IsEmpty() && registerPin->IsEmpty())) {
-		atm.registerAcc(d);
-		ShowAccountInfo(d);
-
+		
 		registerPanel->Hide();
+		initialDepositPanel->Show();
 
 		registerName->Clear();
 
@@ -388,7 +390,6 @@ void MainFrame::AddInformation()
 		registerContact->Clear();
 		registerPin->Clear();
 
-		enterAccountPanel->Show();
 		Layout();
 	}
 }
@@ -724,6 +725,41 @@ void MainFrame::OnValidateContact(wxTextCtrl* contactInput)
 void MainFrame::OnRegisterButtonClicked(wxCommandEvent& evt)
 {
 	AddInformation();
+}
+
+void MainFrame::ConfirmInitialDeposit()
+{
+	double initialDeposit = wxAtof(inputInitialDeposit->GetValue());
+
+	int successfulDeposit = atm.confirmInitialDeposit(initialDeposit);
+
+	if (successfulDeposit == -1) {
+		wxLogMessage("Invalid amount");
+		inputInitialDeposit->Clear();
+		return;
+	}
+
+	if (successfulDeposit == 0) {
+		d.balance += initialDeposit;
+		atm.registerAcc(d);
+		ShowAccountInfo(d);
+
+		initialDepositPanel->Hide();
+		enterAccountPanel->Show();
+		Layout();
+	}
+}
+
+void MainFrame::OnConfirmInitialDepositClicked(wxCommandEvent& evt)
+{
+	ConfirmInitialDeposit();
+}
+
+void MainFrame::OnCancelInitialDepositClicked(wxCommandEvent& evt)
+{
+	initialDepositPanel->Hide();
+	registerPanel->Show();
+	Layout();
 }
 
 void MainFrame::ShowAccountInfo(const Account& account)
