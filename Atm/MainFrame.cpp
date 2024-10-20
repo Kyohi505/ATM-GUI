@@ -54,6 +54,8 @@ void MainFrame::CreateControls()
 	initialDepositPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
 	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputInitialDeposit->SetHint("0.00");
+	inputInitialDeposit->SetMaxLength(8);
+
 	confirmInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Confirm", wxPoint(300, 300), wxSize(120, 35));
 	cancelInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Cancel", wxPoint(450, 300), wxSize(120, 35));
 	initialDepositPanel->Hide();
@@ -96,6 +98,8 @@ void MainFrame::CreateControls()
 	depositPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800,600));
 	inputDeposit = new wxTextCtrl(depositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputDeposit->SetHint("0.00");
+	inputDeposit->SetMaxLength(8);
+
 	confirmDeposit = new wxButton(depositPanel, wxID_ANY, "Confirm", wxPoint(300, 300), wxSize(120, 35));
 	cancelDepositButton = new wxButton(depositPanel, wxID_ANY, "Cancel", wxPoint(400, 300), wxSize(120, 35));
 	depositPanel->Hide();
@@ -104,6 +108,8 @@ void MainFrame::CreateControls()
 	withdrawPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
 	inputWithdraw = new wxTextCtrl(withdrawPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputWithdraw->SetHint("0.00");
+	inputWithdraw->SetMaxLength(8);
+
 	confirmWithdraw = new wxButton(withdrawPanel, wxID_ANY, "Wtihdraw", wxPoint(150, 100), wxSize(120, 35));
 	cancelWithdrawButton = new wxButton(withdrawPanel, wxID_ANY, "Cancel", wxPoint(250, 100), wxSize(120, 35));
 	withdrawPanel->Hide();
@@ -112,10 +118,11 @@ void MainFrame::CreateControls()
 	fundTransferPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
 	inputAccTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(250, 100), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputAccTransfer->SetHint("Input Account Number of Recipient");
-	inputAccTransfer->SetMaxLength(5);
+	inputAccTransfer->SetMaxLength(8);
 
 	inputAmountTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(250, 150), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputAmountTransfer->SetHint("Input Amount to Transfer");
+	inputAmountTransfer->SetMaxLength(8);
 
 	confirmFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Confirm Fund Transfer", wxPoint(250, 200), wxSize(120, 35));
 	cancelFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Cancel", wxPoint(400, 200), wxSize(120, 35));
@@ -214,6 +221,8 @@ void MainFrame::BindEventHandlers()
 	//Initial Deposit
 	confirmInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmInitialDepositClicked, this);
 	cancelInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelInitialDepositClicked, this);
+	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatInitialDepositAmount, this);
+	inputInitialDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 
 	//Enter Acc Binds
 	enterAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnEnterAccButtonClicked, this);
@@ -233,12 +242,14 @@ void MainFrame::BindEventHandlers()
 	confirmDeposit->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmDepositClicked, this);
 	cancelDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelDepositClicked, this);
 	inputDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatDepositAmount, this);
 
 	//Withdraw Binds
 	withdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnWithdrawButtonClicked, this);
 	confirmWithdraw->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmWithdrawClicked, this);
 	cancelWithdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelWithdrawClicked, this);
 	inputWithdraw->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatWithdrawAmount, this);
 
 	//Fund Transfer Binds
 	fundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnFundTransferButtonClicked, this);
@@ -246,6 +257,7 @@ void MainFrame::BindEventHandlers()
 	cancelFundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelFundTransferClicked, this);
 	inputAccTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputAmountTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatTransferAmount, this);
 
 	//Change Account Info Binds
 	accountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnAccountSettingsClicked, this);
@@ -722,6 +734,53 @@ void MainFrame::OnValidateContact(wxTextCtrl* contactInput)
 	contactInput->Refresh();
 }
 
+void MainFrame::OnInputFormatInitialDepositAmount(wxCommandEvent& evt)
+{
+	FormatAmount(inputInitialDeposit);
+}
+
+void MainFrame::OnInputFormatDepositAmount(wxCommandEvent& evt)
+{
+	FormatAmount(inputDeposit);
+}
+
+void MainFrame::OnInputFormatWithdrawAmount(wxCommandEvent& evt)
+{
+	FormatAmount(inputWithdraw);
+}
+
+void MainFrame::OnInputFormatTransferAmount(wxCommandEvent& evt)
+{
+	FormatAmount(inputAmountTransfer);
+}
+
+void MainFrame::FormatAmount(wxTextCtrl* inputAmount)
+{
+	wxString amount = inputAmount->GetValue();
+	int inputBeforeCents = inputAmount->GetInsertionPoint();
+
+	if (amount.IsEmpty() || amount == ".00") {
+		inputAmount->SetValue(wxEmptyString);
+		inputAmount->SetInsertionPoint(0);
+		return;
+	}
+
+	if (!amount.EndsWith(".00")) {
+		amount = amount.BeforeFirst('.') + ".00";
+
+		inputAmount->SetValue(amount);
+
+		if (inputBeforeCents <= amount.Length() - 3) {
+			inputAmount->SetInsertionPoint(inputBeforeCents);
+		}
+		else {
+			inputAmount->SetInsertionPoint(amount.Length() - 3);
+		}
+	}
+
+	inputAmount->Refresh();
+}
+
 void MainFrame::OnRegisterButtonClicked(wxCommandEvent& evt)
 {
 	AddInformation();
@@ -743,6 +802,8 @@ void MainFrame::ConfirmInitialDeposit()
 		d.balance += initialDeposit;
 		atm.registerAcc(d);
 		ShowAccountInfo(d);
+
+		inputInitialDeposit->Clear();
 
 		initialDepositPanel->Hide();
 		enterAccountPanel->Show();
@@ -849,7 +910,7 @@ void MainFrame::AddMoney()
 	else {
 		wxLogMessage("Invalid Amount");
 	}
-
+	 
 }
 
 void MainFrame::OnConfirmDepositClicked(wxCommandEvent& evt)

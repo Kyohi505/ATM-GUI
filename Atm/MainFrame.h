@@ -61,6 +61,13 @@ private:
 
 	wxTextCtrl* registerPin;
 	wxButton* registerAccButton;
+
+	//Format Amount
+	void FormatAmount(wxTextCtrl* inputAmount);
+	void OnInputFormatInitialDepositAmount(wxCommandEvent& evt);
+	void OnInputFormatDepositAmount(wxCommandEvent& evt);
+	void OnInputFormatWithdrawAmount(wxCommandEvent& evt);
+	void OnInputFormatTransferAmount(wxCommandEvent& evt);
 	
 	//Initial Deposit
 	wxPanel* initialDepositPanel;
@@ -234,6 +241,7 @@ private:
 	wxStaticText* PrintAfterTransferBalance;
 	void OnExitReviewTransferedClicked(wxCommandEvent& evt);
 
+	
 	/*Animations
 	wxPanel* AtmOpeningAnimation;
 	wxPanel* DefaultAtmAnimation;
