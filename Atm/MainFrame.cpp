@@ -756,17 +756,27 @@ void MainFrame::OnInputFormatTransferAmount(wxCommandEvent& evt)
 
 void MainFrame::FormatAmount(wxTextCtrl* inputAmount)
 {
+
+	inputAmount->GetEventHandler()->SetEvtHandlerEnabled(false);
+
 	wxString amount = inputAmount->GetValue();
 	int inputBeforeCents = inputAmount->GetInsertionPoint();
 
 	if (amount.IsEmpty() || amount == ".00") {
 		inputAmount->SetValue(wxEmptyString);
 		inputAmount->SetInsertionPoint(0);
+
+		inputAmount->GetEventHandler()->SetEvtHandlerEnabled(true);
 		return;
 	}
 
 	if (!amount.EndsWith(".00")) {
-		amount = amount.BeforeFirst('.') + ".00";
+		if (amount.Contains('.')) {
+			amount = amount.BeforeLast('.') + ".00";
+		}
+		else {
+			amount += ".00";
+		}
 
 		inputAmount->SetValue(amount);
 
@@ -778,8 +788,11 @@ void MainFrame::FormatAmount(wxTextCtrl* inputAmount)
 		}
 	}
 
-	inputAmount->Refresh();
+
+	inputAmount->GetEventHandler()->SetEvtHandlerEnabled(true);
 }
+
+
 
 void MainFrame::OnRegisterButtonClicked(wxCommandEvent& evt)
 {
@@ -787,7 +800,7 @@ void MainFrame::OnRegisterButtonClicked(wxCommandEvent& evt)
 }
 
 void MainFrame::ConfirmInitialDeposit()
-{
+{	
 	double initialDeposit = wxAtof(inputInitialDeposit->GetValue());
 
 	int successfulDeposit = atm.confirmInitialDeposit(initialDeposit);
@@ -799,7 +812,7 @@ void MainFrame::ConfirmInitialDeposit()
 	}
 
 	if (successfulDeposit == 0) {
-		d.balance += initialDeposit;
+		d.balance = initialDeposit;
 		atm.registerAcc(d);
 		ShowAccountInfo(d);
 
