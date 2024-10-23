@@ -133,12 +133,21 @@
   <ItemGroup>
     <ClInclude Include="Account.h" />
     <ClInclude Include="App.h" />
+    <ClInclude Include="FormatValidate.h" />
     <ClInclude Include="MainFrame.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Account.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="FormatValidate.cpp" />
     <ClCompile Include="MainFrame.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Atm.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="atmIcon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

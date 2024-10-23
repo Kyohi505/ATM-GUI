@@ -1,12 +1,13 @@
 #include "MainFrame.h"
-#include <wx/wx.h>
 #include "Account.h"
+#include "FormatValidate.h"
+#include <wx/wx.h>
 #include <string>
 #include <ctime>
 #include <wx/valtext.h>
+#include <wx/sound.h>
 
-
-MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title) 
+MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER)) 
 {
 	CreateControls();
 	BindEventHandlers();
@@ -16,173 +17,255 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title)
 void MainFrame::CreateControls()
 {
 
-	wxPanel* panel = new wxPanel(this);
+	wxFont mainFont(wxFontInfo(wxSize(0, 20)).Bold());
 
-	noOperationPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
+	panel = new wxPanel(this);
+	panel->SetFont(mainFont);
+
+	panel->SetBackgroundColour(wxColour(8, 17, 17));
+	wxBitmap bitmap("images/monitorBg.png", wxBITMAP_TYPE_PNG);
+	backgroundBitmap = new wxStaticBitmap(panel, wxID_ANY, bitmap, wxDefaultPosition, wxSize(1024, 768));
+
+	wxBitmap noOpBitmap("images/noOperationBg.jpg", wxBITMAP_TYPE_JPEG);
+	noOperationPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, noOpBitmap, wxPoint(112, 80), wxSize(800, 600));
+	
+	wxBitmap processBitmap("images/processBg.jpg", wxBITMAP_TYPE_JPEG);
+	processPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, processBitmap, wxPoint(112, 80), wxSize(800, 600));
+	processPanel->Hide();
+
+	wxBitmap withdrawProcessBitmap("images/withdrawDoneBg.jpg", wxBITMAP_TYPE_JPEG);
+	withdrawSuccess = new wxStaticBitmap(backgroundBitmap, wxID_ANY, withdrawProcessBitmap, wxPoint(112, 80), wxSize(800, 600));
+	withdrawSuccess->Hide();
+	
+	wxBitmap depositProcessBitmap("images/depositDoneBg.jpg", wxBITMAP_TYPE_JPEG);
+	depositSuccess = new wxStaticBitmap(backgroundBitmap, wxID_ANY, depositProcessBitmap, wxPoint(112, 80), wxSize(800, 600));
+	depositSuccess->Hide();
+
+	wxBitmap transferProcessBitmap("images/fundTransferDoneBg.jpg", wxBITMAP_TYPE_JPEG);
+	transferSuccess = new wxStaticBitmap(backgroundBitmap, wxID_ANY, transferProcessBitmap, wxPoint(112, 80), wxSize(800, 600));
+	transferSuccess->Hide();
+	
+	wxBitmap takeCardBitmap("images/takeCardBg.jpg", wxBITMAP_TYPE_JPEG);
+	takeCard = new wxStaticBitmap(backgroundBitmap, wxID_ANY, takeCardBitmap, wxPoint(112, 80), wxSize(800, 600));
+	takeCard->Hide();
+
+	wxBitmap exitAtmBitmap("images/exitBg.jpg", wxBITMAP_TYPE_JPEG);
+	exitAtm = new wxStaticBitmap(backgroundBitmap, wxID_ANY, exitAtmBitmap, wxPoint(112, 80), wxSize(800, 600));
+	exitAtm->Hide();
 
 	//Register Account
-	registerPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
+	wxBitmap registerBitmap("images/registerBg.png", wxBITMAP_TYPE_PNG);
+	registerPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, registerBitmap, wxPoint(112, 80), wxSize(800, 600));
 
 	wxString allowedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ";
 	wxTextValidator nameValidator(wxFILTER_INCLUDE_CHAR_LIST);
 	nameValidator.SetCharIncludes(allowedChars);
 
-	registerName = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 100), wxSize(200, 40), 0, nameValidator);
+	registerName = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(390, 40), 0, nameValidator);
 	registerName->SetHint("Enter Name");
+	registerName->SetBackgroundColour(wxColor(248, 247, 255));
 
-	registerBirthMonth = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 150), wxSize(30, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	registerBirthMonth = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(40, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	registerBirthMonth->SetHint("MM");
 	registerBirthMonth->SetMaxLength(2);
+	registerBirthMonth->SetBackgroundColour(wxColor(248, 247, 255));
 
-	registerBirthDay = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(360, 150), wxSize(30, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	registerBirthDay = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(380, 250), wxSize(40, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	registerBirthDay->SetHint("DD");
 	registerBirthDay->SetMaxLength(2);
+	registerBirthDay->SetBackgroundColour(wxColor(248, 247, 255));
 
-	registerBirthYear = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(400, 150), wxSize(50, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	registerBirthYear = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(440, 250), wxSize(70, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	registerBirthYear->SetHint("YYYY");
 	registerBirthYear->SetMaxLength(4);
+	registerBirthYear->SetBackgroundColour(wxColor(248, 247, 255));
 
-	registerContact = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	registerContact = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 300), wxSize(190, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	registerContact->SetHint("+63(9XX)-XXX-XXXX");
 	registerContact->SetMaxLength(13);
+	registerContact->SetBackgroundColour(wxColor(248, 247, 255));
 
-	registerPin = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	registerPin = new wxTextCtrl(registerPanel, wxID_ANY, wxEmptyString, wxPoint(320, 350), wxSize(190, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	registerPin->SetHint("Enter Pin");
 	registerPin->SetMaxLength(6);
+	registerPin->SetBackgroundColour(wxColor(248, 247, 255));
 
+	registerAccButton = new wxButton(registerPanel, wxID_ANY, "Confirm", wxPoint(320, 410), wxSize(190, 50));
+
+	cancelRegisterButton = new wxButton(registerPanel, wxID_ANY, "Cancel", wxPoint(520, 410), wxSize(190, 50));
+	registerPanel->Hide();
+	
 	//Initial Deposit Before Complete Register
-	initialDepositPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	wxBitmap initialDepositBitmap("images/initialDepositBg.png", wxBITMAP_TYPE_PNG);
+	initialDepositPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, initialDepositBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputInitialDeposit->SetHint("0.00");
 	inputInitialDeposit->SetMaxLength(8);
+	inputInitialDeposit->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Confirm", wxPoint(300, 300), wxSize(120, 35));
-	cancelInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Cancel", wxPoint(450, 300), wxSize(120, 35));
+	confirmInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Confirm", wxPoint(320, 350), wxSize(190, 50));
+	cancelInitialDepositButton = new wxButton(initialDepositPanel, wxID_ANY, "Cancel", wxPoint(520, 350), wxSize(190, 50));
 	initialDepositPanel->Hide();
 
-	registerAccButton = new wxButton(registerPanel, wxID_ANY, "Confirm", wxPoint(320, 300), wxSize(120, 35));
-	cancelRegisterButton = new wxButton(registerPanel, wxID_ANY, "Cancel", wxPoint(450, 300), wxSize(120, 35));
-	registerPanel->Hide();
-
 	//Enter Account
-	enterAccountPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	enterAccNum = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	wxBitmap enterAccBitmap("images/enterAccBg.png", wxBITMAP_TYPE_PNG);
+	enterAccountPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, enterAccBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	enterAccNum = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(390, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	enterAccNum->SetHint("Enter Account Number");
 	enterAccNum->SetMaxLength(5);
+	enterAccNum->SetBackgroundColour(wxColor(248, 247, 255));
 
-	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(190, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	enterPin->SetHint("Enter Pin");
 	enterPin->SetMaxLength(6);
+	enterPin->SetBackgroundColour(wxColor(248, 247, 255));
 
-	enterAccButton = new wxButton(enterAccountPanel, wxID_ANY, "Confirm", wxPoint(320, 300), wxSize(120, 35));
-	cancelEnterAccountButton = new wxButton(enterAccountPanel, wxID_ANY, "Cancel", wxPoint(450, 300), wxSize(120, 35));
+	enterAccButton = new wxButton(enterAccountPanel, wxID_ANY, "Confirm", wxPoint(320, 330), wxSize(190, 50));
+	cancelEnterAccountButton = new wxButton(enterAccountPanel, wxID_ANY, "Cancel", wxPoint(520, 330), wxSize(190, 50));
 	enterAccountPanel->Hide();
 
 	//Main Menu
-	mainPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	balanceButton = new wxButton(mainPanel, wxID_ANY, "BALANCE INQUIRY", wxPoint(150, 100), wxSize(120, 35));
-	depositButton = new wxButton(mainPanel, wxID_ANY, "DEPOSIT", wxPoint(150, 150), wxSize(120, 35));
-	fundTransferButton = new wxButton(mainPanel, wxID_ANY, "FUND TRANSFER", wxPoint(150, 200), wxSize(120, 35));
-	withdrawButton = new wxButton(mainPanel, wxID_ANY, "WITHDRAW", wxPoint(350, 100), wxSize(120, 35));
-	accountSettingsButton = new wxButton(mainPanel, wxID_ANY, "ACCOUNT", wxPoint(350, 150), wxSize(120, 35));
-	cancelMainMenuButton = new wxButton(mainPanel, wxID_ANY, "CANCEL", wxPoint(350, 200), wxSize(120, 35));
+	wxBitmap mainMenuBitmap("images/mainMenuBg.png", wxBITMAP_TYPE_PNG);
+	mainPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, mainMenuBitmap, wxPoint(112, 80), wxSize(800, 600));
+	
+	balanceButton = new wxButton(mainPanel, wxID_ANY, "BALANCE INQUIRY", wxPoint(280, 190), wxSize(225, 69));
+	depositButton = new wxButton(mainPanel, wxID_ANY, "DEPOSIT", wxPoint(280, 270), wxSize(225, 69));
+	fundTransferButton = new wxButton(mainPanel, wxID_ANY, "FUND TRANSFER", wxPoint(280, 350), wxSize(225, 69));
+	withdrawButton = new wxButton(mainPanel, wxID_ANY, "WITHDRAW", wxPoint(520, 190), wxSize(225, 69));
+	accountSettingsButton = new wxButton(mainPanel, wxID_ANY, "ACCOUNT", wxPoint(520, 270), wxSize(225, 69));
+	cancelMainMenuButton = new wxButton(mainPanel, wxID_ANY, "CANCEL", wxPoint(520, 350), wxSize(225, 69));
 	mainPanel->Hide();
 
 	//Balance Inquiry
-	balancePanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	printBalance = new wxStaticText(balancePanel, wxID_ANY, wxEmptyString, wxPoint(250, 250), wxSize(200, 40));
-	returnFromBalanceButton = new wxButton(balancePanel, wxID_ANY, "Return", wxPoint(150, 100), wxSize(120, 35));
+	wxBitmap balanceBitmap("images/balanceBg.png", wxBITMAP_TYPE_PNG);
+	balancePanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, balanceBitmap, wxPoint(112, 80), wxSize(800, 600));
+	
+	printBalance = new wxStaticText(balancePanel, wxID_ANY, wxEmptyString, wxPoint(340, 190), wxSize(150, 30));
+	printBalance->SetBackgroundColour(*wxWHITE);
+	wxFont bigFont(wxFontInfo(wxSize(0, 30)).Bold());
+	printBalance->SetFont(bigFont);
+
+	returnFromBalanceButton = new wxButton(balancePanel, wxID_ANY, "Return", wxPoint(520, 350), wxSize(190, 50));
 	balancePanel->Hide();
 
 	//Deposit
-	depositPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800,600));
-	inputDeposit = new wxTextCtrl(depositPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	wxBitmap depositBitmap("images/depositBg.png", wxBITMAP_TYPE_PNG);
+	depositPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, depositBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	inputDeposit = new wxTextCtrl(depositPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputDeposit->SetHint("0.00");
 	inputDeposit->SetMaxLength(8);
+	inputDeposit->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmDeposit = new wxButton(depositPanel, wxID_ANY, "Confirm", wxPoint(300, 300), wxSize(120, 35));
-	cancelDepositButton = new wxButton(depositPanel, wxID_ANY, "Cancel", wxPoint(400, 300), wxSize(120, 35));
+	confirmDeposit = new wxButton(depositPanel, wxID_ANY, "Deposit", wxPoint(320, 350), wxSize(190, 50));
+	cancelDepositButton = new wxButton(depositPanel, wxID_ANY, "Cancel", wxPoint(520, 350), wxSize(190, 50));
 	depositPanel->Hide();
 
 	//Withdraw
-	withdrawPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	inputWithdraw = new wxTextCtrl(withdrawPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	wxBitmap withdrawBitmap("images/withdrawBg.png", wxBITMAP_TYPE_PNG);
+	withdrawPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, withdrawBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	inputWithdraw = new wxTextCtrl(withdrawPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputWithdraw->SetHint("0.00");
 	inputWithdraw->SetMaxLength(8);
+	inputWithdraw->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmWithdraw = new wxButton(withdrawPanel, wxID_ANY, "Wtihdraw", wxPoint(150, 100), wxSize(120, 35));
-	cancelWithdrawButton = new wxButton(withdrawPanel, wxID_ANY, "Cancel", wxPoint(250, 100), wxSize(120, 35));
+	confirmWithdraw = new wxButton(withdrawPanel, wxID_ANY, "Wtihdraw", wxPoint(320, 350), wxSize(190, 50));
+	cancelWithdrawButton = new wxButton(withdrawPanel, wxID_ANY, "Cancel", wxPoint(520, 350), wxSize(190, 50));
 	withdrawPanel->Hide();
 
 	//Fund Transfer
-	fundTransferPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	inputAccTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(250, 100), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	wxBitmap fundTransferBitmap("images/fundTransferBg.png", wxBITMAP_TYPE_PNG);
+	fundTransferPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, fundTransferBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	inputAccTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(390, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputAccTransfer->SetHint("Input Account Number of Recipient");
 	inputAccTransfer->SetMaxLength(8);
+	inputAccTransfer->SetBackgroundColour(wxColor(248, 247, 255));
 
-	inputAmountTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(250, 150), wxSize(200, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	inputAmountTransfer = new wxTextCtrl(fundTransferPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(390, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputAmountTransfer->SetHint("Input Amount to Transfer");
 	inputAmountTransfer->SetMaxLength(8);
+	inputAmountTransfer->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Confirm Fund Transfer", wxPoint(250, 200), wxSize(120, 35));
-	cancelFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Cancel", wxPoint(400, 200), wxSize(120, 35));
+	confirmFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Transfer", wxPoint(320, 330), wxSize(190, 50));
+	cancelFundTransferButton = new wxButton(fundTransferPanel, wxID_ANY, "Cancel", wxPoint(520, 330), wxSize(190, 50));
 	fundTransferPanel->Hide();
 
 	//Account Settings
-	accountPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
-	changeAccInfoButton = new wxButton(accountPanel, wxID_ANY, "Change Information", wxPoint(100, 300), wxSize(120, 35));
-	changeAccPinButton = new wxButton(accountPanel, wxID_ANY, "Change Pin", wxPoint(200, 300), wxSize(120, 35));
-	cancelAccountSettingsButton = new wxButton(accountPanel, wxID_ANY, "Cancel", wxPoint(350, 350), wxSize(120, 35));
+	wxBitmap accountSettingsBitmap("images/accountSettingsBg.png", wxBITMAP_TYPE_PNG);
+	accountPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, accountSettingsBitmap, wxPoint(112, 80), wxSize(800, 600));
+
+	changeAccInfoButton = new wxButton(accountPanel, wxID_ANY, "Change Information", wxPoint(280, 230), wxSize(225, 69));
+	changeAccPinButton = new wxButton(accountPanel, wxID_ANY, "Change Pin", wxPoint(520, 230), wxSize(225, 69));
+	cancelAccountSettingsButton = new wxButton(accountPanel, wxID_ANY, "Cancel", wxPoint(400, 350), wxSize(225, 69));
 	accountPanel->Hide();
 
 	//Change Account Information
-	changeInfoPanel  = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
+	wxBitmap changeInfoBitmap("images/changeInfoBg.jpg", wxBITMAP_TYPE_JPEG);
+	changeInfoPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, changeInfoBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	printName = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 100), wxSize(200, 40));
-	changeNameInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 150), wxSize(200, 40), 0, nameValidator);
+	printName = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 100), wxSize(200, 40));
+	printName->SetBackgroundColour(*wxWHITE);
+
+	changeNameInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 150), wxSize(390, 40), 0, nameValidator);
 	changeNameInput->SetHint("Enter New Name");
+	changeNameInput->SetBackgroundColour(wxColor(248, 247, 255));
 
-	printBday = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 200), wxSize(200, 40));
+	printBday = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(200, 40));
+	printBday->SetBackgroundColour(*wxWHITE);
 
-	changeMonthInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 250), wxSize(30, 40));
+	changeMonthInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(40, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	changeMonthInput->SetHint("MM");
 	changeMonthInput->SetMaxLength(2);
+	changeMonthInput->SetBackgroundColour(wxColor(248, 247, 255));
 
-	changeDayInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(300, 250), wxSize(30, 40));
+	changeDayInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(380, 250), wxSize(40, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	changeDayInput->SetHint("DD");
 	changeDayInput->SetMaxLength(2);
+	changeDayInput->SetBackgroundColour(wxColor(248, 247, 255));
 
-	changeYearInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(350, 250), wxSize(50, 40));
+	changeYearInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(440, 250), wxSize(70, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	changeYearInput->SetHint("YYYY");
 	changeYearInput->SetMaxLength(4);
+	changeYearInput->SetBackgroundColour(wxColor(248, 247, 255));
 
-	printContact = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 300), wxSize(200, 40));
-	changeContactInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(250, 350), wxSize(200, 40));
+	printContact = new wxStaticText(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 300), wxSize(200, 40));
+	printContact->SetBackgroundColour(*wxWHITE);
+
+	changeContactInput = new wxTextCtrl(changeInfoPanel, wxID_ANY, wxEmptyString, wxPoint(320, 350), wxSize(190, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
 	changeContactInput->SetHint("+63(9XX)-XXX-XXXX");
 	changeContactInput->SetMaxLength(13);
+	changeContactInput->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmInfoChangeButton = new wxButton(changeInfoPanel, wxID_ANY, "Confirm Changed Information", wxPoint(250, 400), wxSize(170, 35));
-	cancelChangeAccInfoButton = new wxButton(changeInfoPanel, wxID_ANY, "Cancel", wxPoint(400, 400), wxSize(170, 35));
+	confirmInfoChangeButton = new wxButton(changeInfoPanel, wxID_ANY, "Confirm", wxPoint(320, 410), wxSize(190, 50));
+	cancelChangeAccInfoButton = new wxButton(changeInfoPanel, wxID_ANY, "Cancel", wxPoint(520, 410), wxSize(190, 50));
 
 	changeInfoPanel->Hide();
 
 	//Change Pin
-	changePinPanel = new wxPanel(panel, wxID_ANY, wxDefaultPosition, wxSize(800, 600));
+	wxBitmap changePinBitmap("images/changePinBg.jpg", wxBITMAP_TYPE_JPEG);
+	changePinPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, changePinBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	inputCurrentPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(250, 100), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	inputCurrentPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(420, 200), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	inputCurrentPin->SetHint("Input Current Pin");
 	inputCurrentPin->SetMaxLength(6);
+	inputCurrentPin->SetBackgroundColour(wxColor(248, 247, 255));
 
-	inputNewPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(250, 150), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	inputNewPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(420, 250), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	inputNewPin->SetHint("Input New Pin");
 	inputNewPin->SetMaxLength(6);
+	inputNewPin->SetBackgroundColour(wxColor(248, 247, 255));
 
-	inputConfirmNewPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(250, 200), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	inputConfirmNewPin = new wxTextCtrl(changePinPanel, wxID_ANY, wxEmptyString, wxPoint(420, 300), wxSize(200, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	inputConfirmNewPin->SetHint("Confirm New Pin");
 	inputConfirmNewPin->SetMaxLength(6);
+	inputConfirmNewPin->SetBackgroundColour(wxColor(248, 247, 255));
 
-	confirmPinChangeButton = new wxButton(changePinPanel, wxID_ANY, "Confirm Change Pin", wxPoint(250, 250), wxSize(120, 35));
-	cancelChangePinButton = new wxButton(changePinPanel, wxID_ANY, "Cancel", wxPoint(400, 250), wxSize(120, 35));
+	confirmPinChangeButton = new wxButton(changePinPanel, wxID_ANY, "Confirm", wxPoint(320, 410), wxSize(190, 50));
+	cancelChangePinButton = new wxButton(changePinPanel, wxID_ANY, "Cancel", wxPoint(520, 410), wxSize(190, 50));
 
 	changePinPanel->Hide();
 
@@ -191,13 +274,17 @@ void MainFrame::CreateControls()
 void MainFrame::BindEventHandlers()
 {
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
+	this->Bind(wxEVT_CHAR_HOOK, &MainFrame::OnKeyPress, this);
 
 	noOperationPanel->Bind(wxEVT_LEFT_DOWN, &MainFrame::OnScreenClicked, this);
 
 	//Register Acc Binds
 	registerAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnRegisterButtonClicked, this);
+	registerAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelRegisterButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelRegisterClicked, this);
-	
+	cancelRegisterButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	registerName->Bind(wxEVT_TEXT, &MainFrame::NameInput, this);
 
 	registerBirthMonth->Bind(wxEVT_TEXT, &MainFrame::OnInputRegisterMonth, this);
@@ -220,53 +307,99 @@ void MainFrame::BindEventHandlers()
 
 	//Initial Deposit
 	confirmInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmInitialDepositClicked, this);
+	confirmInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelInitialDepositClicked, this);
-	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatInitialDepositAmount, this);
+	cancelInitialDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	inputInitialDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatInitialDepositAmount, this);
+	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputInitialDeposit, this);
 
 	//Enter Acc Binds
 	enterAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnEnterAccButtonClicked, this);
+	enterAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelEnterAccountButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelEnterAccClicked, this);
+	cancelEnterAccountButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	enterAccNum->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	
 	enterPin->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	enterPin->Bind(wxEVT_TEXT, &MainFrame::OnInputEnterPin, this);
 
 	//Main Menu Binds
 	cancelMainMenuButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelMainMenuClicked, this);
+	cancelMainMenuButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 
 	//Balance Inquiry Binds
 	balanceButton->Bind(wxEVT_BUTTON, &MainFrame::OnBalanceButtonClicked, this);
+	balanceButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	returnFromBalanceButton->Bind(wxEVT_BUTTON, &MainFrame::ReturnFromBalanceToMain, this);
+	returnFromBalanceButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 
 	//Deposit Binds
 	depositButton->Bind(wxEVT_BUTTON, &MainFrame::OnDepositButtonClicked, this);
+	depositButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	confirmDeposit->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmDepositClicked, this);
+	confirmDeposit->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelDepositClicked, this);
+	cancelDepositButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	inputDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatDepositAmount, this);
+	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputDeposit, this);
 
 	//Withdraw Binds
 	withdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnWithdrawButtonClicked, this);
+	withdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+	
 	confirmWithdraw->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmWithdrawClicked, this);
+	confirmWithdraw->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelWithdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelWithdrawClicked, this);
+	cancelWithdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	inputWithdraw->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatWithdrawAmount, this);
+	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnInputWithdraw, this);
 
 	//Fund Transfer Binds
 	fundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnFundTransferButtonClicked, this);
+	fundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	confirmFundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmFundTransferClicked, this);
+	confirmFundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelFundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelFundTransferClicked, this);
+	cancelFundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	inputAccTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
+	inputAccTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFundTransfer, this);
+
 	inputAmountTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatTransferAmount, this);
+	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFundTransfer, this);
 
 	//Change Account Info Binds
 	accountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnAccountSettingsClicked, this);
+	accountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelAccountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelAccSettingsClicked, this);
+	cancelAccountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 
 	changeAccInfoButton->Bind(wxEVT_BUTTON, &MainFrame::OnChangeAccInfoClicked, this);
+	changeAccInfoButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	confirmInfoChangeButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmInfoChangeClicked, this);
+	confirmInfoChangeButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelChangeAccInfoButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelChangeAccInfoClicked, this);
-	
+	cancelChangeAccInfoButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	changeMonthInput->Bind(wxEVT_TEXT, &MainFrame::OnChangeBirthMonth, this);
 	changeMonthInput->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	changeMonthInput->Bind(wxEVT_KILL_FOCUS, &MainFrame::OnChangeMonthFocusLost, this);
@@ -282,10 +415,12 @@ void MainFrame::BindEventHandlers()
 	changeContactInput->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	changeContactInput->Bind(wxEVT_TEXT, &MainFrame::OnChangeContact, this);
 
-	changeAccPinButton->Bind(wxEVT_BUTTON, &MainFrame::OnChangeAccPinClicked, this);
-
 	//Change Pin
+	changeAccPinButton->Bind(wxEVT_BUTTON, &MainFrame::OnChangeAccPinClicked, this);
+	changeAccPinButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
+
 	cancelChangePinButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelChangePinClicked, this);
+	cancelChangePinButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 
 	inputCurrentPin->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputCurrentPin->Bind(wxEVT_TEXT, &MainFrame::OnInputCurrentPin, this);
@@ -297,7 +432,31 @@ void MainFrame::BindEventHandlers()
 	inputConfirmNewPin->Bind(wxEVT_TEXT, &MainFrame::OnInputConfirmPin, this);
 
 	confirmPinChangeButton->Bind(wxEVT_BUTTON, &MainFrame::OnConfirmPinChangeClicked, this);
+	confirmPinChangeButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 }
+
+void MainFrame::OnKeyPress(wxKeyEvent& event)
+{
+	if (event.GetKeyCode() == WXK_F11) {
+		bool isFullScreen = this->IsFullScreen();
+		this->ShowFullScreen(!isFullScreen, wxFULLSCREEN_NOBORDER);
+		backgroundBitmap->Center();
+		this->Layout();
+	}
+
+	else if (event.GetKeyCode() == 'F' && event.ControlDown()) {
+		bool isFullScreen = this->IsFullScreen();
+		this->ShowFullScreen(!isFullScreen, wxFULLSCREEN_NOBORDER);
+		
+		backgroundBitmap->Center();
+
+		this->Layout();
+	}
+	else {
+		event.Skip();
+	}
+}
+
 
 void MainFrame::OnWindowClosed(wxCloseEvent& evt)
 {
@@ -308,6 +467,7 @@ void MainFrame::OnWindowClosed(wxCloseEvent& evt)
 void MainFrame::OnScreenClicked(wxMouseEvent& evt)
 {
 	noOperationPanel->Hide();
+	
 	registerPanel->Show();
 	Layout();
 }
@@ -331,20 +491,17 @@ void MainFrame::NameInput(wxCommandEvent& evt)
 	}
 }
 
-void MainFrame::OnInputRegisterPin(wxCommandEvent& evt)
+void MainFrame::OnButtonPressed(wxCommandEvent& evt)
 {
-	OnValidatePin(registerPin);
+	wxSound buttonSFX("sfx/button.wav");
+	buttonSFX.Play();
+	
+	evt.Skip();
 }
 
-void MainFrame::OnValidatePin(wxTextCtrl* inputPin)
+void MainFrame::OnInputRegisterPin(wxCommandEvent& evt)
 {
-	wxString pin = inputPin->GetValue();
-
-	if(pin.length() > 3){
-	inputPin->SetBackgroundColour(*wxWHITE);
-	inputPin->Refresh();
-	}
-	
+	formatValidate.OnValidatePin(registerPin);
 }
 
 void MainFrame::AddInformation()
@@ -362,7 +519,7 @@ void MainFrame::AddInformation()
 	long month, day, year;
 	if ((registerBirthMonth->GetValue().ToLong(&month) && registerBirthDay->GetValue().ToLong(&day) &&
 		registerBirthYear->GetValue().ToLong(&year))) {
-		d.bday = StoreBday(month, day, year);
+		d.bday = formatValidate.FormatBday(month, day, year);
 	}
 	
 
@@ -406,393 +563,58 @@ void MainFrame::AddInformation()
 	}
 }
 
-int MainFrame::GetCurrentYear()
+void MainFrame::OnCancelRegisterClicked(wxCommandEvent& evt)
 {
-	time_t t = time(0);
-	struct tm* now = localtime(&t);
-	return (now->tm_year + 1900);
-}
+	registerPanel->Hide();
 
-int MainFrame::GetDaysInMonth(long month, long year)
-{
-	int dayInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+	registerName->Clear();
+	registerBirthMonth->Clear();
+	registerBirthDay->Clear();
+	registerBirthYear->Clear();
+	registerContact->Clear();
+	registerPin->Clear();
 
-	if (year % 4 == 0 && year % 100 != 0 || year % 400 == 0) {
-		dayInMonth[1] = 29;
-	}
-
-	return dayInMonth[month - 1];
-}
-
-string MainFrame::StoreBday(long month, long day, long year) {
-
-	wxString bday = wxString::Format("%02d/%02d/%04d", month, day, year);
-	return bday.ToStdString();
-
-}
-
-void MainFrame::OnInputRegisterMonth(wxCommandEvent& evt)
-{
-	OnValidateMonth(registerBirthMonth, registerBirthDay);
-}
-
-bool MainFrame::OnValidateMonth(wxTextCtrl* monthInput, wxTextCtrl* dayInput)
-{
-	long month;
-	wxString validMonth = monthInput->GetValue();
-	
-
-	if (validMonth.length() > 0) {
-		if (validMonth.length() == 2) {
-			if (validMonth[0] != '0' && validMonth[0] != '1') {
-				monthInput->SetBackgroundColour(*wxRED);
-				monthInput->Clear();
-				return false;
-			}
-
-			if (!dayInput->IsEmpty()) {
-				wxString validDay = dayInput->GetValue();
-				long day;
-				if (validDay.ToLong(&day) && validMonth == "02" && day > 29) {
-					dayInput->Clear();
-					dayInput->SetBackgroundColour(*wxRED);
-					return false;
-				}
-			}
-
-			if (validMonth.ToLong(&month)) {
-				if (month < 1 || month > 12) {
-					monthInput->SetBackgroundColour(*wxRED);
-					monthInput->Clear();
-					return false;
-				}
-				else if (month >= 1 || month <= 12) {
-					monthInput->Refresh();
-					monthInput->SetBackgroundColour(*wxWHITE);
-					return true;
-				}
-
-			}
-			
-		}
-	
-	}
-
-	monthInput->Refresh();
-}
-
-void MainFrame::OnRegisterMonthFocusLost(wxFocusEvent& evt)
-{
-	FormatMonthOnFocusLost(registerBirthMonth);
-	evt.Skip();
-}
-
-void MainFrame::FormatMonthOnFocusLost(wxTextCtrl* monthInput)
-{
-	long month;
-	wxString formatMonth = monthInput->GetValue();
-
-	if (!monthInput->IsEmpty()) {
-		if (formatMonth.ToLong(&month) && formatMonth.length() == 1)
-		{
-			monthInput->SetValue(wxString::Format("0%ld", month));
-		}
-	}
-}
-
-void MainFrame::OnInputRegisterDay(wxCommandEvent& evt)
-{
-	OnValidateDay(registerBirthMonth, registerBirthDay, registerBirthYear);
-}
-
-bool MainFrame::OnValidateDay(wxTextCtrl* monthInput, wxTextCtrl* dayInput, wxTextCtrl* yearInput)
-{
-	long day;
-	long month;
-	long year;
-
-	wxString validDay = dayInput->GetValue();
-	wxString validMonth = monthInput->GetValue();
-	wxString validYear = yearInput->GetValue();
-
-	if (validDay.ToLong(&day)) {
-
-		if (monthInput->IsEmpty() || yearInput->IsEmpty()) {
-			if (day > 31 || validDay == "00") {
-				dayInput->Clear();
-				dayInput->SetBackgroundColour(*wxRED);
-				return false;
-			}
-
-			if (!monthInput->IsEmpty() && yearInput->IsEmpty()) {
-				if (validMonth == "02") {
-					if (day > 29) {
-						dayInput->Clear();
-						dayInput->SetBackgroundColour(*wxRED);
-						return false;
-					}
-					else {
-						dayInput->Refresh();
-						dayInput->SetBackgroundColour(*wxWHITE);
-						return true;
-					}
-				}
-			}
-
-			else {
-				dayInput->Refresh();
-				dayInput->SetBackgroundColour(*wxWHITE);
-				return true;
-			}
-		}
-		
-	}
-
-	if (validMonth.ToLong(&month) && validYear.ToLong(&year) && validDay.ToLong(&day)) {
-		int dayMonth = GetDaysInMonth(month, year);
-
-		if (!monthInput->IsEmpty() && !yearInput->IsEmpty()) {
-			if (!dayInput->IsEmpty() && validYear.length() == 4) {
-
-				if (day > dayMonth || day < 1 && day > 31 || validDay == "00")
-				{
-					dayInput->Clear();
-					dayInput->SetBackgroundColour(*wxRED);
-					return false;
-				}
-				else {
-					if (validDay.length() == 2) {
-						dayInput->Refresh();
-						dayInput->SetBackgroundColour(*wxWHITE);
-						return true;
-					}
-				}
-
-			}
-		}
-	}
-	
-	registerBirthDay->Refresh();
-}
-
-void MainFrame::OnRegisterDayFocusLost(wxFocusEvent& evt)
-{
-	FormatDayOnFocusLost(registerBirthDay);
-	evt.Skip();
-}
-
-void MainFrame::FormatDayOnFocusLost(wxTextCtrl* dayInput)
-{
-	long day;
-	wxString formatDay = dayInput->GetValue();
-
-	if (!dayInput->IsEmpty()) {
-		if (formatDay.ToLong(&day) && formatDay.length() == 1)
-		{
-			dayInput->SetValue(wxString::Format("0%ld", day));
-		}
-	}
-}
-
-void MainFrame::OnInputRegisterYear(wxCommandEvent& evt)
-{
-	OnValidateYear(registerBirthMonth, registerBirthDay, registerBirthYear);
-}
-
-bool MainFrame::OnValidateYear(wxTextCtrl* monthInput, wxTextCtrl* dayInput, wxTextCtrl* yearInput)
-{
-	long year;
-	long day;
-	long month;
-
-	wxString validYear = yearInput->GetValue();
-	wxString validDay = dayInput->GetValue();
-	wxString validMonth = monthInput->GetValue();
-
-	int currentYear = GetCurrentYear();
-	wxString yearString = wxString::Format("%d", currentYear);
-
-	if (validYear.ToLong(&year) && validYear.length() > 0) {
-
-		if (validYear[0] == '0') {
-			yearInput->SetBackgroundColour(*wxRED);
-			yearInput->Clear();
-			return false;
-		}
-
-		if (validYear.length() == 2) {
-			if (validYear[0] == '1' && validYear[1] != '9') {
-				yearInput->SetBackgroundColour(*wxRED);
-				yearInput->Clear();
-				return false;
-			}
-		}
-
-		if (validYear.length() == 2) {
-			int inputFirstDigit = validYear[0] - '0';
-			int inputSecondDigit = validYear[1] - '0';
-			int currentFirstDigit = yearString[0] - '0';
-			int currentSecondDigit = yearString[1] - '0';
-
-			if (inputFirstDigit > currentFirstDigit ||
-				(inputFirstDigit == currentFirstDigit && inputSecondDigit > currentSecondDigit)) {
-				yearInput->SetBackgroundColour(*wxRED);
-				yearInput->Clear();
-				return false;
-			}
-		}
-
-		if (validYear.length() == 4 && year > currentYear) {
-			yearInput->SetBackgroundColour(*wxRED);
-			yearInput->Clear();
-			return false;
-		}
-
-		if (validDay.ToLong(&day) && validMonth.ToLong(&month) && validMonth.length() == 2 && validYear.length() == 4) {
-			if (validMonth == "02") {
-				if (!(year % 4 == 0 && year % 100 != 0 || year % 400 == 0)) {
-					if (day > 28) {
-						dayInput->SetBackgroundColour(*wxRED);
-						dayInput->Clear();
-						return false;
-					}
-				}
-				else if ((year % 4 == 0 && year % 100 != 0 || year % 400 == 0)) {
-					if (day <= 29) {
-						registerBirthYear->Refresh();
-						yearInput->SetBackgroundColour(*wxWHITE);
-						return true;
-					}
-				}
-			}
-		}
-
-		if (validYear.length() == 4 && year <= currentYear) {
-			registerBirthYear->Refresh();
-			yearInput->SetBackgroundColour(*wxWHITE);
-			return true;
-		}
-	}
-
-	registerBirthYear->Refresh();
-}
-
-void MainFrame::OnRegisterYearFocusLost(wxFocusEvent& evt)
-{
-	FormatYearOnFocusLost(registerBirthYear);
-	evt.Skip();
-}
-
-void MainFrame::FormatYearOnFocusLost(wxTextCtrl* yearInput)
-{
-	wxString formatYear = yearInput->GetValue();
-
-	if (formatYear.length() < 4) {
-		yearInput->SetBackgroundColour(*wxRED);
-		yearInput->Clear();
-	}
+	enterAccountPanel->Show();
+	Layout();
 }
 
 void MainFrame::OnInputRegisterContact(wxCommandEvent& evt)
 {
-	OnValidateContact(registerContact);
+	formatValidate.OnValidateContact(registerContact);
 }
 
-void MainFrame::OnValidateContact(wxTextCtrl* contactInput)
+void MainFrame::OnInputRegisterMonth(wxCommandEvent& evt)
 {
-	wxString currentInput = contactInput->GetValue();
-
-	if (currentInput.IsEmpty()) {
-		currentInput = "+63";
-		contactInput->SetValue(currentInput);
-		contactInput->SetInsertionPointEnd();
-	}
-
-	if (currentInput.length() == 13) {
-		contactInput->Refresh();
-		contactInput->SetBackgroundColour(*wxWHITE);
-	}
-
-	else {
-		if (currentInput == "+63") {
-			contactInput->SetInsertionPointEnd();
-			return;
-		}
-
-		if (currentInput.length() < 3 || !(currentInput.StartsWith("+63"))) {
-			if (currentInput.Length() > 3) {
-				currentInput = "+63" + currentInput.Remove(0, 3);
-			}
-			else {
-				currentInput = "+63";
-			}
-			contactInput->SetValue(currentInput);
-		}
-	}
-
-	contactInput->SetInsertionPointEnd();
-	contactInput->Refresh();
+	formatValidate.OnValidateMonth(registerBirthMonth, registerBirthDay, registerBirthYear);
 }
 
-void MainFrame::OnInputFormatInitialDepositAmount(wxCommandEvent& evt)
+void MainFrame::OnRegisterMonthFocusLost(wxFocusEvent& evt)
 {
-	FormatAmount(inputInitialDeposit);
+	formatValidate.FormatMonthOnFocusLost(registerBirthMonth);
+	evt.Skip();
 }
 
-void MainFrame::OnInputFormatDepositAmount(wxCommandEvent& evt)
+void MainFrame::OnInputRegisterDay(wxCommandEvent& evt)
 {
-	FormatAmount(inputDeposit);
+	formatValidate.OnValidateDay(registerBirthMonth, registerBirthDay, registerBirthYear);
 }
 
-void MainFrame::OnInputFormatWithdrawAmount(wxCommandEvent& evt)
+void MainFrame::OnRegisterDayFocusLost(wxFocusEvent& evt)
 {
-	FormatAmount(inputWithdraw);
+	formatValidate.FormatDayOnFocusLost(registerBirthDay);
+	evt.Skip();
 }
 
-void MainFrame::OnInputFormatTransferAmount(wxCommandEvent& evt)
+void MainFrame::OnInputRegisterYear(wxCommandEvent& evt)
 {
-	FormatAmount(inputAmountTransfer);
+	formatValidate.OnValidateYear(registerBirthMonth, registerBirthDay, registerBirthYear);
 }
 
-void MainFrame::FormatAmount(wxTextCtrl* inputAmount)
+void MainFrame::OnRegisterYearFocusLost(wxFocusEvent& evt)
 {
-
-	inputAmount->GetEventHandler()->SetEvtHandlerEnabled(false);
-
-	wxString amount = inputAmount->GetValue();
-	int inputBeforeCents = inputAmount->GetInsertionPoint();
-
-	if (amount.IsEmpty() || amount == ".00") {
-		inputAmount->SetValue(wxEmptyString);
-		inputAmount->SetInsertionPoint(0);
-
-		inputAmount->GetEventHandler()->SetEvtHandlerEnabled(true);
-		return;
-	}
-
-	if (!amount.EndsWith(".00")) {
-		if (amount.Contains('.')) {
-			amount = amount.BeforeLast('.') + ".00";
-		}
-		else {
-			amount += ".00";
-		}
-
-		inputAmount->SetValue(amount);
-
-		if (inputBeforeCents <= amount.Length() - 3) {
-			inputAmount->SetInsertionPoint(inputBeforeCents);
-		}
-		else {
-			inputAmount->SetInsertionPoint(amount.Length() - 3);
-		}
-	}
-
-
-	inputAmount->GetEventHandler()->SetEvtHandlerEnabled(true);
+	formatValidate.FormatYearOnFocusLost(registerBirthYear);
+	evt.Skip();
 }
-
-
 
 void MainFrame::OnRegisterButtonClicked(wxCommandEvent& evt)
 {
@@ -806,8 +628,8 @@ void MainFrame::ConfirmInitialDeposit()
 	int successfulDeposit = atm.confirmInitialDeposit(initialDeposit);
 
 	if (successfulDeposit == -1) {
-		wxLogMessage("Invalid amount");
 		inputInitialDeposit->Clear();
+		inputInitialDeposit->SetBackgroundColour(*wxRED);
 		return;
 	}
 
@@ -824,6 +646,22 @@ void MainFrame::ConfirmInitialDeposit()
 	}
 }
 
+void MainFrame::OnInputInitialDeposit(wxCommandEvent& evt)
+{
+	wxString amountString = inputInitialDeposit->GetValue();
+
+	if (amountString.length() > 1) {
+		inputInitialDeposit->SetBackgroundColour(wxColor(248, 247, 255));
+		inputInitialDeposit->Refresh();
+	}
+	evt.Skip();
+}
+
+void MainFrame::OnInputFormatInitialDepositAmount(wxCommandEvent& evt)
+{
+	formatValidate.FormatAmount(inputInitialDeposit);
+}
+
 void MainFrame::OnConfirmInitialDepositClicked(wxCommandEvent& evt)
 {
 	ConfirmInitialDeposit();
@@ -833,6 +671,9 @@ void MainFrame::OnCancelInitialDepositClicked(wxCommandEvent& evt)
 {
 	initialDepositPanel->Hide();
 	registerPanel->Show();
+	inputInitialDeposit->Clear();
+	inputInitialDeposit->SetBackgroundColour(wxColor(248, 247, 255));
+
 	Layout();
 }
 
@@ -870,6 +711,9 @@ void MainFrame::EnterAccount()
 
 	else if(enter == 0) {
 		wxLogMessage("Wrong Pin");
+		enterPin->SetBackgroundColour(*wxRED);
+		enterPin->Clear();
+		enterPin->Refresh();
 	}
 
 	else if(enter == -1){
@@ -878,15 +722,31 @@ void MainFrame::EnterAccount()
 
 }
 
+void MainFrame::OnInputEnterPin(wxCommandEvent& evt)
+{
+	formatValidate.OnValidatePin(enterPin);
+}
+
 void MainFrame::OnEnterAccButtonClicked(wxCommandEvent& evt)
 {
 	EnterAccount();
 }
 
+void MainFrame::OnCancelEnterAccClicked(wxCommandEvent& evt)
+{
+	enterAccountPanel->Hide();
+
+	enterAccNum->Clear();
+	enterPin->Clear();
+	enterPin->SetBackgroundColour(wxColor(248, 247, 255));
+	registerPanel->Show();
+	Layout();
+}
+
 void MainFrame::BalanceInquiry()
 {
 	double balance = atm.getBalance();
-	wxString currentBalance = wxString::Format("Your Current Balance: %.2f", balance);
+	wxString currentBalance = wxString::Format("Your Current Balance: \n  %.2f", balance);
 	printBalance->SetLabel(currentBalance);
 	Layout();
 }
@@ -901,6 +761,7 @@ void MainFrame::OnBalanceButtonClicked(wxCommandEvent& evt)
 void MainFrame::ReturnFromBalanceToMain(wxCommandEvent& evt) {
 	balancePanel->Hide();
 	mainPanel->Show();
+	
 	Layout();
 }
 
@@ -911,26 +772,52 @@ void MainFrame::OnDepositButtonClicked(wxCommandEvent& evt)
 	Layout();
 }
 
-void MainFrame::AddMoney()
+void MainFrame::DepositMoney()
 {
 	double amount = wxAtof(inputDeposit->GetValue());
 
-	if (amount >= 0) {
+	if (amount > 0) {
 		atm.deposit(amount);
-		wxLogMessage("Deposit Successful");
 		inputDeposit->Clear();
+		ProcessTransaction(depositPanel);
 	}
 	else {
-		wxLogMessage("Invalid Amount");
+		inputDeposit->Clear();
+		inputDeposit->SetBackgroundColour(*wxRED);
+		return;
 	}
 	 
 }
 
+void MainFrame::OnInputDeposit(wxCommandEvent& evt)
+{
+	wxString amountString = inputDeposit->GetValue();
+
+	if (amountString.length() > 1) {
+		inputDeposit->SetBackgroundColour(wxColor(248, 247, 255));
+		inputDeposit->Refresh();
+	}
+	evt.Skip();
+}
+
+void MainFrame::OnCancelDepositClicked(wxCommandEvent& evt)
+{
+	depositPanel->Hide();
+	inputDeposit->Clear();
+	inputDeposit->SetBackgroundColour(wxColor(248, 247, 255));
+
+	mainPanel->Show();
+	Layout();
+}
+
 void MainFrame::OnConfirmDepositClicked(wxCommandEvent& evt)
 {
-	AddMoney();
-	depositPanel->Hide();
-	mainPanel->Show();
+	DepositMoney();
+}
+
+void MainFrame::OnInputFormatDepositAmount(wxCommandEvent& evt)
+{
+	formatValidate.FormatAmount(inputDeposit);
 }
 
 void MainFrame::OnWithdrawButtonClicked(wxCommandEvent& evt)
@@ -940,30 +827,57 @@ void MainFrame::OnWithdrawButtonClicked(wxCommandEvent& evt)
 	Layout();
 }
 
+void MainFrame::OnCancelWithdrawClicked(wxCommandEvent& evt)
+{
+	withdrawPanel->Hide();
+	inputWithdraw->Clear();
+	inputWithdraw->SetBackgroundColour(wxColor(248, 247, 255));
+
+	mainPanel->Show();
+	Layout();
+}
+
 void MainFrame::WithdrawMoney()
 {
+	
 	double amount = wxAtof(inputWithdraw->GetValue());
 	double currentBalance = atm.getBalance();
 
 	if (amount <= 0 || amount > currentBalance) {
-		wxLogMessage("Invalid Amount");
+		inputWithdraw->Clear();
+		inputWithdraw->SetBackgroundColour(*wxRED);
+		return;
 	}
+	
 	else {
 		if (amount <= currentBalance) {
 			atm.withdraw(amount);
-			wxLogMessage("Withdraw Successful");
+			ProcessTransaction(withdrawPanel);
 			inputWithdraw->Clear();
 		}
 	}
-
 }
 
 void MainFrame::OnConfirmWithdrawClicked(wxCommandEvent& evt)
 {
 	WithdrawMoney();
-	withdrawPanel->Hide();
-	mainPanel->Show();
 	Layout();
+}
+
+void MainFrame::OnInputFormatWithdrawAmount(wxCommandEvent& evt)
+{
+	formatValidate.FormatAmount(inputWithdraw);
+}
+
+void MainFrame::OnInputWithdraw(wxCommandEvent& evt)
+{
+	wxString amountString = inputWithdraw->GetValue();
+
+	if (amountString.length() > 1) {
+		inputWithdraw->SetBackgroundColour(wxColor(248, 247, 255));
+		inputWithdraw->Refresh();
+	}
+	evt.Skip();
 }
 
 void MainFrame::OnFundTransferButtonClicked(wxCommandEvent& evt)
@@ -977,7 +891,8 @@ void MainFrame::TransferMoney()
 {
 	if (inputAccTransfer->IsEmpty() || inputAmountTransfer->IsEmpty())
 	{
-		wxLogMessage("Incomplete Input");
+		inputAccTransfer->SetBackgroundColour(*wxRED);
+		inputAmountTransfer->SetBackgroundColour(*wxRED);
 	}
 
 	else if (!inputAccTransfer->IsEmpty() && !inputAmountTransfer->IsEmpty()) {
@@ -988,29 +903,71 @@ void MainFrame::TransferMoney()
 
 		if (successfulTransfer == -1) {
 			wxLogMessage("No Account Found");
+			
 		}
 
 		else if (successfulTransfer == 0) {
 			wxLogMessage("Cannot Transfer to Self");
+			inputAccTransfer->Clear();
+			inputAccTransfer->SetBackgroundColour(*wxRED);
+			inputAccTransfer->Refresh();
 		}
 
 		else if (successfulTransfer == -2) {
-			wxLogMessage("Invalid Amount");
+			inputAmountTransfer->Clear();
+			inputAmountTransfer->SetBackgroundColour(*wxRED);
+			inputAmountTransfer->Refresh();
 		}
 
 		else if (successfulTransfer == 1) {
-			fundTransferPanel->Hide();
 			inputAccTransfer->Clear();
 			inputAmountTransfer->Clear();
-			mainPanel->Show();
+
+			ProcessTransaction(fundTransferPanel);
 			Layout();
 		}
 	}
 }
 
+void MainFrame::OnInputFundTransfer(wxCommandEvent& evt)
+{
+	wxString amountString = inputAmountTransfer->GetValue();
+	wxString accString = inputAccTransfer->GetValue();
+
+	if (amountString.length() > 1) {
+		inputAmountTransfer->SetBackgroundColour(wxColor(248, 247, 255));
+		inputAmountTransfer->Refresh();
+	}
+
+	if (accString.length() > 1) {
+		inputAccTransfer->SetBackgroundColour(wxColor(248, 247, 255));
+		inputAccTransfer->Refresh();
+	}
+
+	evt.Skip();
+}
+
+void MainFrame::OnInputFormatTransferAmount(wxCommandEvent& evt)
+{
+	formatValidate.FormatAmount(inputAmountTransfer);
+}
+
 void MainFrame::OnConfirmFundTransferClicked(wxCommandEvent& evt)
 {
 	TransferMoney();
+}
+
+void MainFrame::OnCancelFundTransferClicked(wxCommandEvent& evt)
+{
+	fundTransferPanel->Hide();
+	inputAccTransfer->Clear();
+	inputAccTransfer->SetBackgroundColour(wxColor(248, 247, 255));
+
+	inputAmountTransfer->Clear();
+	inputAmountTransfer->SetBackgroundColour(wxColor(248, 247, 255));
+
+	mainPanel->Show();
+	Layout();
 }
 
 void MainFrame::OnAccountSettingsClicked(wxCommandEvent& evt)
@@ -1025,6 +982,13 @@ void MainFrame::OnChangeAccInfoClicked(wxCommandEvent& evt)
 	accountPanel->Hide();
 	changeInfoPanel->Show();
 	PrintCurrentInformation();
+}
+
+void MainFrame::OnCancelAccSettingsClicked(wxCommandEvent& evt)
+{
+	accountPanel->Hide();
+	mainPanel->Show();
+	Layout();
 }
 
 void MainFrame::PrintCurrentInformation()
@@ -1057,7 +1021,7 @@ void MainFrame::UpdateInformation()
 	long month, day, year;
 	if ((changeMonthInput->GetValue().ToLong(&month) && changeDayInput->GetValue().ToLong(&day) &&
 		changeYearInput->GetValue().ToLong(&year))) {
-		wxString newBday = StoreBday(month, day, year);
+		wxString newBday = formatValidate.FormatBday(month, day, year);
 		atm.changeAccBday(newBday.ToStdString());
 
 		changeMonthInput->Clear();
@@ -1065,50 +1029,77 @@ void MainFrame::UpdateInformation()
 		changeYearInput->Clear();
 	}
 
-	if (!changeContactInput->IsEmpty()) {
-		string newAccContact = changeContactInput->GetValue().ToStdString();
+	wxString contact = changeContactInput->GetValue();
+	if (contact.Length() < 13) {
+		changeContactInput->SetBackgroundColour(*wxRED);
+		changeContactInput->Clear();
+		return;
+	}
+	else {
+		string newAccContact = contact.ToStdString();
 		atm.changeAccContact(newAccContact);
 		changeContactInput->Clear();
 	}
+}
 
+void MainFrame::OnCancelChangeAccInfoClicked(wxCommandEvent& evt)
+{
+	changeInfoPanel->Hide();
+
+	changeNameInput->Clear();
+
+	changeMonthInput->Clear();
+	changeMonthInput->SetBackgroundColour(wxColor(248, 247, 255));
+
+	changeDayInput->Clear();
+	changeDayInput->SetBackgroundColour(wxColor(248, 247, 255));
+
+	changeYearInput->Clear();
+	changeYearInput->SetBackgroundColour(wxColor(248, 247, 255));
+
+	changeContactInput->Clear();
+	changeContactInput->SetBackgroundColour(wxColor(248, 247, 255));
+
+	mainPanel->Show();
+	Layout();
 }
 
 void MainFrame::OnChangeBirthMonth(wxCommandEvent& evt) 
 {
-	OnValidateMonth(changeMonthInput, changeDayInput);
+	formatValidate.OnValidateMonth(changeMonthInput, changeDayInput, changeYearInput);
 }
 
 void MainFrame::OnChangeMonthFocusLost(wxFocusEvent& evt)
 {
-	FormatMonthOnFocusLost(changeMonthInput);
+	formatValidate.FormatMonthOnFocusLost(changeMonthInput);
 	evt.Skip();
 }
 
 void MainFrame::OnChangeBirthDay(wxCommandEvent& evt)
 {
-	OnValidateDay(changeMonthInput, changeDayInput, changeYearInput);
+	formatValidate.OnValidateDay(changeMonthInput, changeDayInput, changeYearInput);
 }
 
 void MainFrame::OnChangeDayFocusLost(wxFocusEvent& evt)
 {
-	FormatDayOnFocusLost(changeDayInput);
+	formatValidate.FormatDayOnFocusLost(changeDayInput);
 	evt.Skip();
 }
 
 void MainFrame::OnChangeBirthYear(wxCommandEvent& evt)
 {
-	OnValidateYear(changeMonthInput, changeDayInput, changeYearInput);
+	formatValidate.OnValidateYear(changeMonthInput, changeDayInput, changeYearInput);
 }
 
 void MainFrame::OnChangeYearFocusLost(wxFocusEvent& evt)
 {
-	FormatYearOnFocusLost(changeYearInput);
+	formatValidate.FormatYearOnFocusLost(changeYearInput);
 	evt.Skip();
 }
 
 void MainFrame::OnChangeContact(wxCommandEvent& evt)
 {
-	OnValidateContact(changeContactInput);
+	formatValidate.OnValidateContact(changeContactInput);
 }
 
 void MainFrame::OnConfirmInfoChangeClicked(wxCommandEvent& evt)
@@ -1126,9 +1117,18 @@ void MainFrame::OnChangeAccPinClicked(wxCommandEvent& evt)
 
 void MainFrame::UpdatePin()
 {
+	wxString currentPinL = inputCurrentPin->GetValue();
+	wxString newPinL = inputNewPin->GetValue();
+	wxString confirmPinL = inputConfirmNewPin->GetValue();
+
 	if (inputCurrentPin->IsEmpty() && inputNewPin->IsEmpty() && inputConfirmNewPin->IsEmpty())
 	{
 		wxLogMessage("Incomplete Input");
+	}
+
+	if (newPinL.length() < 4 && confirmPinL.length() < 4) {
+		wxLogMessage("Invalid Pin");
+		return;
 	}
 
 	else if(!inputCurrentPin->IsEmpty() && !inputNewPin->IsEmpty() && !inputConfirmNewPin->IsEmpty()){
@@ -1140,22 +1140,27 @@ void MainFrame::UpdatePin()
 
 		if (confirm == 1) {
 			changePinPanel->Hide();
+
 			inputCurrentPin->Clear();
+			inputCurrentPin->SetBackgroundColour(wxColor(248, 247, 255));
+
 			inputNewPin->Clear();
+			inputNewPin->SetBackgroundColour(wxColor(248, 247, 255));
+
 			inputConfirmNewPin->Clear();
+			inputConfirmNewPin->SetBackgroundColour(wxColor(248, 247, 255));
+
 			mainPanel->Show();
 			Layout();
 		}
 
-		else if (confirm == 0) {
-			wxLogMessage("Input Pin does not match Current Pin");
+		else if (confirm == 0 && currentPinL.length() < 4) {
 			inputCurrentPin->SetBackgroundColour(*wxRED);
 			inputCurrentPin->Clear();
 			inputCurrentPin->Refresh();
 		}
 
-		else if (confirm == -1) {
-			wxLogMessage("New Pin does not match Confirm Pin");
+		else if (confirm == -1 && newPinL.length() < 4 && confirmPinL.length() < 4) {
 			inputConfirmNewPin->SetBackgroundColour(*wxRED);
 			inputConfirmNewPin->Clear();
 			inputConfirmNewPin->Refresh();
@@ -1167,19 +1172,37 @@ void MainFrame::UpdatePin()
 	}
 }
 
+void MainFrame::OnCancelChangePinClicked(wxCommandEvent& evt)
+{
+	changePinPanel->Hide();
+
+	inputCurrentPin->Clear();
+	inputCurrentPin->SetBackgroundColour(wxColor(248, 247, 255));
+
+	inputNewPin->Clear();
+	inputNewPin->SetBackgroundColour(wxColor(248, 247, 255));
+
+	inputConfirmNewPin->Clear();
+	inputConfirmNewPin->SetBackgroundColour(wxColor(248, 247, 255));
+
+	mainPanel->Show();
+	Layout();
+}
+
+
 void MainFrame::OnInputCurrentPin(wxCommandEvent& evt)
 {
-	OnValidatePin(inputCurrentPin);
+	formatValidate.OnValidatePin(inputCurrentPin);
 }
 
 void MainFrame::OnInputNewPin(wxCommandEvent& evt)
 {
-	OnValidatePin(inputNewPin);
+	formatValidate.OnValidatePin(inputNewPin);
 }
 
 void MainFrame::OnInputConfirmPin(wxCommandEvent& evt)
 {
-	OnValidatePin(inputConfirmNewPin);
+	formatValidate.OnValidatePin(inputConfirmNewPin);
 }
 
 void MainFrame::OnConfirmPinChangeClicked(wxCommandEvent& evt)
@@ -1187,92 +1210,84 @@ void MainFrame::OnConfirmPinChangeClicked(wxCommandEvent& evt)
 	UpdatePin();
 }
 
-void MainFrame::OnCancelRegisterClicked(wxCommandEvent& evt)
-{
-	registerPanel->Hide();
-
-	registerName->Clear();
-	registerBirthMonth->Clear();
-	registerBirthDay->Clear();
-	registerBirthYear->Clear();
-	registerContact->Clear();
-	registerPin->Clear();
-
-	enterAccountPanel->Show();
-	Layout();
-}
-
-void MainFrame::OnCancelEnterAccClicked(wxCommandEvent& evt)
-{
-	enterAccountPanel->Hide();
-
-	enterAccNum->Clear();
-	enterPin->Clear();
-
-	registerPanel->Show();
-	Layout();
-}
-
 void MainFrame::OnCancelMainMenuClicked(wxCommandEvent& evt)
 {
 	mainPanel->Hide();
-	enterAccountPanel->Show();
+	takeCard->Show();
+	wxSound getCardSound("sfx/getCard.wav");
+	getCardSound.Play();
+	Delay(8000);
+
+	takeCard->Hide();
+	exitAtm->Show();
+	wxSound exitSound("sfx/exit.wav");
+	exitSound.Play();
+	
+	Delay(3000);
+
+
+	exitAtm->Hide();
+	noOperationPanel->Show();
+	
 	Layout();
 }
 
-void MainFrame::OnCancelDepositClicked(wxCommandEvent& evt)
-{
-	depositPanel->Hide();
-	inputDeposit->Clear();
+void MainFrame::Delay(int milliseconds) {
+	wxLongLong start = wxGetLocalTimeMillis();
+	while ((wxGetLocalTimeMillis() - start).GetValue() < milliseconds) {
+		wxYield();
+	}
+}
+
+
+void MainFrame::ProcessTransaction(wxStaticBitmap* panel) {
+	panel->Hide();
+	processPanel->Show();
+	//plpay sound coressponding to transact
+	if (panel == depositPanel || panel == fundTransferPanel) {
+		wxSound insertMoneySound("sfx/deposit.wav");
+		insertMoneySound.Play();
+		Delay(4000);
+	}
+
+	if (panel == withdrawPanel) {
+		wxSound withdrawSound("sfx/withdraw.wav");
+		withdrawSound.Play();
+		Delay(6000);
+	}
+	
+	
+	OnProcess(panel);
+	
+}
+
+void MainFrame::OnProcess(wxStaticBitmap* panel) {
+	processPanel->Hide();
+
+	if (panel == depositPanel) {
+		depositSuccess->Show();
+	}
+
+	if (panel == withdrawPanel) {
+		withdrawSuccess->Show();
+	}
+
+	if (panel == fundTransferPanel) {
+		transferSuccess->Show();
+	}
+
+	Delay(3000);
+	OnSuccess(panel);
+}
+
+void MainFrame::OnSuccess(wxStaticBitmap* panel) {
+
+	depositSuccess->Hide();
+	withdrawSuccess->Hide();
+	transferSuccess->Hide();
 	mainPanel->Show();
+
 	Layout();
 }
 
-void MainFrame::OnCancelWithdrawClicked(wxCommandEvent& evt)
-{
-	withdrawPanel->Hide();
-	inputWithdraw->Clear();
-	mainPanel->Show();
-	Layout();
-}
 
-void MainFrame::OnCancelFundTransferClicked(wxCommandEvent& evt)
-{
-	fundTransferPanel->Hide();
-	inputAccTransfer->Clear();
-	mainPanel->Show();
-	Layout();
-}
-
-void MainFrame::OnCancelAccSettingsClicked(wxCommandEvent& evt)
-{
-	accountPanel->Hide();
-	mainPanel->Show();
-	Layout();
-}
-
-void MainFrame::OnCancelChangeAccInfoClicked(wxCommandEvent& evt)
-{
-	changeInfoPanel->Hide();
-
-	changeNameInput->Clear();
-	changeMonthInput->Clear();
-	changeDayInput->Clear();
-	changeYearInput->Clear();
-	changeContactInput->Clear();
-
-	mainPanel->Show();
-	Layout();
-}
-
-void MainFrame::OnCancelChangePinClicked(wxCommandEvent& evt)
-{
-	changePinPanel->Hide();
-
-	inputCurrentPin->Clear();
-	inputNewPin->Clear();
-	inputConfirmNewPin->Clear();
-
-	mainPanel->Show();
-	Layout();
-}
