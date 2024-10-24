@@ -14,6 +14,8 @@ private:
 	Account d;
 	AtmSystem atm;
 	FormatValidate formatValidate;
+	
+	string key = "ilovedsa";
 
 	void OnIdleCheckUsb(wxIdleEvent& evt);
 	bool usbCheckEnabled = false;
@@ -21,6 +23,7 @@ private:
 	void OnKeyPress(wxKeyEvent& evt);
 	
 	wxMediaCtrl* videoCtrl;
+	bool PlayVideoWithUsbCheck(int maxLoops);
 
 	wxPanel* panel;
 	wxStaticBitmap* backgroundBitmap;

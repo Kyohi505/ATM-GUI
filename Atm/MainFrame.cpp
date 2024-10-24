@@ -107,7 +107,7 @@ void MainFrame::CreateControls()
 	wxBitmap initialDepositBitmap("images/initialDepositBg.png", wxBITMAP_TYPE_PNG);
 	initialDepositPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, initialDepositBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	inputInitialDeposit = new wxTextCtrl(initialDepositPanel, wxID_ANY, wxEmptyString, wxPoint(420, 250), wxSize(190, 50), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputInitialDeposit->SetHint("0.00");
 	inputInitialDeposit->SetMaxLength(8);
 	inputInitialDeposit->SetBackgroundColour(wxColor(248, 247, 255));
@@ -120,11 +120,11 @@ void MainFrame::CreateControls()
 	wxBitmap enterAccBitmap("images/enterAccBg.png", wxBITMAP_TYPE_PNG);
 	enterAccountPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, enterAccBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	printAccNum = new wxStaticText(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(300, 190), wxSize(150, 30));
+	printAccNum = new wxStaticText(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 190), wxSize(150, 30));
 	printAccNum->SetBackgroundColour(*wxWHITE);
 	printAccNum->SetFont(bigFont);
 
-	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(190, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
+	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(400, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	enterPin->SetHint("Enter Pin");
 	enterPin->SetMaxLength(6);
 	enterPin->SetBackgroundColour(wxColor(248, 247, 255));
@@ -132,8 +132,6 @@ void MainFrame::CreateControls()
 	enterAccButton = new wxButton(enterAccountPanel, wxID_ANY, "Confirm", wxPoint(320, 330), wxSize(190, 50));
 	cancelEnterAccountButton = new wxButton(enterAccountPanel, wxID_ANY, "Cancel", wxPoint(520, 330), wxSize(190, 50));
 	enterAccountPanel->Hide();
-
-	
 
 	//Main Menu
 	wxBitmap mainMenuBitmap("images/mainMenuBg.png", wxBITMAP_TYPE_PNG);
@@ -162,7 +160,7 @@ void MainFrame::CreateControls()
 	wxBitmap depositBitmap("images/depositBg.png", wxBITMAP_TYPE_PNG);
 	depositPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, depositBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	inputDeposit = new wxTextCtrl(depositPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	inputDeposit = new wxTextCtrl(depositPanel, wxID_ANY, wxEmptyString, wxPoint(420, 250), wxSize(190, 50), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputDeposit->SetHint("0.00");
 	inputDeposit->SetMaxLength(8);
 	inputDeposit->SetBackgroundColour(wxColor(248, 247, 255));
@@ -175,7 +173,7 @@ void MainFrame::CreateControls()
 	wxBitmap withdrawBitmap("images/withdrawBg.png", wxBITMAP_TYPE_PNG);
 	withdrawPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, withdrawBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	inputWithdraw = new wxTextCtrl(withdrawPanel, wxID_ANY, wxEmptyString, wxPoint(450, 250), wxSize(120, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
+	inputWithdraw = new wxTextCtrl(withdrawPanel, wxID_ANY, wxEmptyString, wxPoint(420, 250), wxSize(190, 50), 0, wxTextValidator(wxFILTER_NUMERIC));
 	inputWithdraw->SetHint("0.00");
 	inputWithdraw->SetMaxLength(8);
 	inputWithdraw->SetBackgroundColour(wxColor(248, 247, 255));
@@ -465,8 +463,8 @@ void MainFrame::OnIdleCheckUsb(wxIdleEvent& evt)
 	string currentDrive = atm.checkUsb();
 
 	if (currentDrive != "") {
-		wxLogMessage("USB detected!");
-
+		wxSound insertCardSFX("sfx/insertCard.wav");
+		insertCardSFX.Play();
 		usbCheckEnabled = false;
 		videoCtrl->Stop();
 		videoCtrl->Hide();
@@ -484,31 +482,52 @@ void MainFrame::OnIdleCheckUsb(wxIdleEvent& evt)
 		}
 		
 	}
-	else {
-		wxLogMessage("Insert Usb");
-	}
-
 	evt.RequestMore();
 }
 
 void MainFrame::OnScreenClicked(wxMouseEvent& evt)
 {
 	usbCheckEnabled = true;
-
 	noOperationPanel->Hide();
-	videoCtrl->Show();
-	videoCtrl->Play();
-	
-	Delay(84000);
 
-	videoCtrl->Stop();
-
-	if (videoCtrl->GetState() == wxMEDIASTATE_STOPPED)
-	{
-		videoCtrl->Play();
-		
+	if (PlayVideoWithUsbCheck(3) == false) {
+		videoCtrl->Stop();
+		videoCtrl->Hide();
+		noOperationPanel->Show();
+		Layout();
+		Refresh();
 	}
 
+}
+
+bool MainFrame::PlayVideoWithUsbCheck(int maxLoops)
+{
+	int loopCount = 0;
+	const int videoDuration = 60000;
+	const int stepDelay = 500;
+
+	while (loopCount < maxLoops) {
+		videoCtrl->Show();
+		videoCtrl->Play();
+
+		int elapsedTime = 0;
+		while (elapsedTime < videoDuration) {
+			Delay(stepDelay);
+			elapsedTime += stepDelay;
+
+			if (!usbCheckEnabled) {
+				return true; 
+			}
+
+			wxYield();
+		}
+
+		videoCtrl->Stop();
+		loopCount++;
+		wxYield();
+	}
+
+	return false;
 }
 
 void MainFrame::OnKeyPress(wxKeyEvent& event)
@@ -574,7 +593,6 @@ void MainFrame::AddInformation()
 
 		wxLogMessage("Complete Input Information");
 		return;
-
 	}
 
 	long month, day, year;
@@ -600,6 +618,8 @@ void MainFrame::AddInformation()
 		return;
 	}
 	d.pinCode = pin.ToStdString();
+
+	d.encryptedPin = atm.decryptEncrypt(d.pinCode, key);
 
 	wxString inputName = registerName->GetValue();
 	inputName = inputName.Trim();
@@ -700,7 +720,7 @@ void MainFrame::ConfirmInitialDeposit()
 		atm.storeAcc();
 		
 		string currentDrive = atm.checkUsb();
-		atm.storePinToUSB(currentDrive, d.accNum, d.pinCode);
+		atm.storePinToUSB(currentDrive, d.accNum, d.encryptedPin);
 
 
 		ShowAccountInfo(d);
@@ -709,6 +729,7 @@ void MainFrame::ConfirmInitialDeposit()
 
 		initialDepositPanel->Hide();
 		enterAccountPanel->Show();
+		OnPrintAccNum();
 		Layout();
 	}
 }
