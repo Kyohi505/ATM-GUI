@@ -6,8 +6,9 @@
 #include <ctime>
 #include <wx/valtext.h>
 #include <wx/sound.h>
+#include <wx/mediactrl.h>
 
-MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER)) 
+MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE & ~(wxRESIZE_BORDER | wxMAXIMIZE_BOX)) 
 {
 	CreateControls();
 	BindEventHandlers();
@@ -18,17 +19,24 @@ void MainFrame::CreateControls()
 {
 
 	wxFont mainFont(wxFontInfo(wxSize(0, 20)).Bold());
+	wxFont bigFont(wxFontInfo(wxSize(0, 30)).Bold());
 
 	panel = new wxPanel(this);
 	panel->SetFont(mainFont);
 
 	panel->SetBackgroundColour(wxColour(8, 17, 17));
+
 	wxBitmap bitmap("images/monitorBg.png", wxBITMAP_TYPE_PNG);
 	backgroundBitmap = new wxStaticBitmap(panel, wxID_ANY, bitmap, wxDefaultPosition, wxSize(1024, 768));
+	
+	videoCtrl = new wxMediaCtrl(backgroundBitmap, wxID_ANY, wxEmptyString, wxPoint(112, 80), wxSize(800, 600), wxBORDER_NONE);
+	videoCtrl->Load(wxT("insertCard.mp4"));
+	videoCtrl->Hide();
+	videoCtrl->SetPlaybackRate(1.0);
 
 	wxBitmap noOpBitmap("images/noOperationBg.jpg", wxBITMAP_TYPE_JPEG);
 	noOperationPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, noOpBitmap, wxPoint(112, 80), wxSize(800, 600));
-	
+
 	wxBitmap processBitmap("images/processBg.jpg", wxBITMAP_TYPE_JPEG);
 	processPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, processBitmap, wxPoint(112, 80), wxSize(800, 600));
 	processPanel->Hide();
@@ -112,10 +120,9 @@ void MainFrame::CreateControls()
 	wxBitmap enterAccBitmap("images/enterAccBg.png", wxBITMAP_TYPE_PNG);
 	enterAccountPanel = new wxStaticBitmap(backgroundBitmap, wxID_ANY, enterAccBitmap, wxPoint(112, 80), wxSize(800, 600));
 
-	enterAccNum = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 200), wxSize(390, 40), 0, wxTextValidator(wxFILTER_NUMERIC));
-	enterAccNum->SetHint("Enter Account Number");
-	enterAccNum->SetMaxLength(5);
-	enterAccNum->SetBackgroundColour(wxColor(248, 247, 255));
+	printAccNum = new wxStaticText(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(300, 190), wxSize(150, 30));
+	printAccNum->SetBackgroundColour(*wxWHITE);
+	printAccNum->SetFont(bigFont);
 
 	enterPin = new wxTextCtrl(enterAccountPanel, wxID_ANY, wxEmptyString, wxPoint(320, 250), wxSize(190, 40), wxTE_PASSWORD, wxTextValidator(wxFILTER_NUMERIC));
 	enterPin->SetHint("Enter Pin");
@@ -125,6 +132,8 @@ void MainFrame::CreateControls()
 	enterAccButton = new wxButton(enterAccountPanel, wxID_ANY, "Confirm", wxPoint(320, 330), wxSize(190, 50));
 	cancelEnterAccountButton = new wxButton(enterAccountPanel, wxID_ANY, "Cancel", wxPoint(520, 330), wxSize(190, 50));
 	enterAccountPanel->Hide();
+
+	
 
 	//Main Menu
 	wxBitmap mainMenuBitmap("images/mainMenuBg.png", wxBITMAP_TYPE_PNG);
@@ -144,7 +153,6 @@ void MainFrame::CreateControls()
 	
 	printBalance = new wxStaticText(balancePanel, wxID_ANY, wxEmptyString, wxPoint(340, 190), wxSize(150, 30));
 	printBalance->SetBackgroundColour(*wxWHITE);
-	wxFont bigFont(wxFontInfo(wxSize(0, 30)).Bold());
 	printBalance->SetFont(bigFont);
 
 	returnFromBalanceButton = new wxButton(balancePanel, wxID_ANY, "Return", wxPoint(520, 350), wxSize(190, 50));
@@ -275,6 +283,7 @@ void MainFrame::BindEventHandlers()
 {
 	this->Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnWindowClosed, this);
 	this->Bind(wxEVT_CHAR_HOOK, &MainFrame::OnKeyPress, this);
+	this->Bind(wxEVT_IDLE, &MainFrame::OnIdleCheckUsb, this);
 
 	noOperationPanel->Bind(wxEVT_LEFT_DOWN, &MainFrame::OnScreenClicked, this);
 
@@ -315,6 +324,7 @@ void MainFrame::BindEventHandlers()
 	inputInitialDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatInitialDepositAmount, this);
 	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputInitialDeposit, this);
+	inputInitialDeposit->Bind(wxEVT_TEXT, &MainFrame::OnButtonPressed, this);
 
 	//Enter Acc Binds
 	enterAccButton->Bind(wxEVT_BUTTON, &MainFrame::OnEnterAccButtonClicked, this);
@@ -322,8 +332,6 @@ void MainFrame::BindEventHandlers()
 
 	cancelEnterAccountButton->Bind(wxEVT_BUTTON, &MainFrame::OnCancelEnterAccClicked, this);
 	cancelEnterAccountButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
-
-	enterAccNum->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	
 	enterPin->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	enterPin->Bind(wxEVT_TEXT, &MainFrame::OnInputEnterPin, this);
@@ -352,6 +360,7 @@ void MainFrame::BindEventHandlers()
 	inputDeposit->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatDepositAmount, this);
 	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnInputDeposit, this);
+	inputDeposit->Bind(wxEVT_TEXT, &MainFrame::OnButtonPressed, this);
 
 	//Withdraw Binds
 	withdrawButton->Bind(wxEVT_BUTTON, &MainFrame::OnWithdrawButtonClicked, this);
@@ -366,6 +375,7 @@ void MainFrame::BindEventHandlers()
 	inputWithdraw->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatWithdrawAmount, this);
 	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnInputWithdraw, this);
+	inputWithdraw->Bind(wxEVT_TEXT, &MainFrame::OnButtonPressed, this);
 
 	//Fund Transfer Binds
 	fundTransferButton->Bind(wxEVT_BUTTON, &MainFrame::OnFundTransferButtonClicked, this);
@@ -379,10 +389,12 @@ void MainFrame::BindEventHandlers()
 
 	inputAccTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputAccTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFundTransfer, this);
+	inputAccTransfer->Bind(wxEVT_TEXT, &MainFrame::OnButtonPressed, this);
 
 	inputAmountTransfer->Bind(wxEVT_CHAR, &MainFrame::OnlyNumInput, this);
 	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFormatTransferAmount, this);
 	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnInputFundTransfer, this);
+	inputAmountTransfer->Bind(wxEVT_TEXT, &MainFrame::OnButtonPressed, this);
 
 	//Change Account Info Binds
 	accountSettingsButton->Bind(wxEVT_BUTTON, &MainFrame::OnAccountSettingsClicked, this);
@@ -435,6 +447,70 @@ void MainFrame::BindEventHandlers()
 	confirmPinChangeButton->Bind(wxEVT_BUTTON, &MainFrame::OnButtonPressed, this);
 }
 
+void MainFrame::OnWindowClosed(wxCloseEvent& evt)
+{
+	usbCheckEnabled = false;
+	atm.storeAcc();
+	evt.Skip();
+}
+
+void MainFrame::OnIdleCheckUsb(wxIdleEvent& evt)
+{
+
+	if (!usbCheckEnabled) {
+		evt.Skip();
+		return;
+	}
+
+	string currentDrive = atm.checkUsb();
+
+	if (currentDrive != "") {
+		wxLogMessage("USB detected!");
+
+		usbCheckEnabled = false;
+		videoCtrl->Stop();
+		videoCtrl->Hide();
+		
+		if (atm.checkRegisterUSB(currentDrive) == false) {
+			registerPanel->Show();
+			Layout();
+			Refresh();
+		}
+		else if (atm.checkRegisterUSB(currentDrive) == true) {
+			enterAccountPanel->Show();
+			OnPrintAccNum();
+			Layout();
+			Refresh();
+		}
+		
+	}
+	else {
+		wxLogMessage("Insert Usb");
+	}
+
+	evt.RequestMore();
+}
+
+void MainFrame::OnScreenClicked(wxMouseEvent& evt)
+{
+	usbCheckEnabled = true;
+
+	noOperationPanel->Hide();
+	videoCtrl->Show();
+	videoCtrl->Play();
+	
+	Delay(84000);
+
+	videoCtrl->Stop();
+
+	if (videoCtrl->GetState() == wxMEDIASTATE_STOPPED)
+	{
+		videoCtrl->Play();
+		
+	}
+
+}
+
 void MainFrame::OnKeyPress(wxKeyEvent& event)
 {
 	if (event.GetKeyCode() == WXK_F11) {
@@ -447,7 +523,7 @@ void MainFrame::OnKeyPress(wxKeyEvent& event)
 	else if (event.GetKeyCode() == 'F' && event.ControlDown()) {
 		bool isFullScreen = this->IsFullScreen();
 		this->ShowFullScreen(!isFullScreen, wxFULLSCREEN_NOBORDER);
-		
+
 		backgroundBitmap->Center();
 
 		this->Layout();
@@ -455,21 +531,6 @@ void MainFrame::OnKeyPress(wxKeyEvent& event)
 	else {
 		event.Skip();
 	}
-}
-
-
-void MainFrame::OnWindowClosed(wxCloseEvent& evt)
-{
-	atm.storeAcc();
-	evt.Skip();
-}
-
-void MainFrame::OnScreenClicked(wxMouseEvent& evt)
-{
-	noOperationPanel->Hide();
-	
-	registerPanel->Show();
-	Layout();
 }
 
 void MainFrame::OnlyNumInput(wxKeyEvent& evt)
@@ -636,6 +697,12 @@ void MainFrame::ConfirmInitialDeposit()
 	if (successfulDeposit == 0) {
 		d.balance = initialDeposit;
 		atm.registerAcc(d);
+		atm.storeAcc();
+		
+		string currentDrive = atm.checkUsb();
+		atm.storePinToUSB(currentDrive, d.accNum, d.pinCode);
+
+
 		ShowAccountInfo(d);
 
 		inputInitialDeposit->Clear();
@@ -693,17 +760,16 @@ void MainFrame::ShowAccountInfo(const Account& account)
 
 void MainFrame::EnterAccount()
 {
-	wxString accNum = enterAccNum->GetValue();
-	string num = accNum.ToStdString();
+	string currentDrive = atm.checkUsb();
+	string  accNum = atm.getAccNumUSB(currentDrive);
 
 	wxString pinCode = (enterPin->GetValue());
 	string pin = pinCode.ToStdString();
 
-	int enter = atm.enterAcc(num, pin);
+	int enter = atm.enterAcc(accNum, pin);
 
 	if (enter == 1) {
 		enterAccountPanel->Hide();
-		enterAccNum->Clear();
 		enterPin->Clear();
 		mainPanel->Show();
 		Layout();
@@ -727,6 +793,18 @@ void MainFrame::OnInputEnterPin(wxCommandEvent& evt)
 	formatValidate.OnValidatePin(enterPin);
 }
 
+void MainFrame::OnPrintAccNum()
+{
+	string currentDrive = atm.checkUsb();
+
+	string  accNum = atm.getAccNumUSB(currentDrive);
+
+	wxString currentAccNum = wxString::Format("Account Number: %s", accNum);
+	printAccNum->SetLabel(currentAccNum);
+	Refresh();
+	Layout();
+}
+
 void MainFrame::OnEnterAccButtonClicked(wxCommandEvent& evt)
 {
 	EnterAccount();
@@ -735,18 +813,16 @@ void MainFrame::OnEnterAccButtonClicked(wxCommandEvent& evt)
 void MainFrame::OnCancelEnterAccClicked(wxCommandEvent& evt)
 {
 	enterAccountPanel->Hide();
-
-	enterAccNum->Clear();
 	enterPin->Clear();
 	enterPin->SetBackgroundColour(wxColor(248, 247, 255));
-	registerPanel->Show();
+	noOperationPanel->Show();
 	Layout();
 }
 
 void MainFrame::BalanceInquiry()
 {
 	double balance = atm.getBalance();
-	wxString currentBalance = wxString::Format("Your Current Balance: \n  %.2f", balance);
+	wxString currentBalance = wxString::Format("Your Current Balance: \n  $%.2f", balance);
 	printBalance->SetLabel(currentBalance);
 	Layout();
 }
@@ -1243,7 +1319,7 @@ void MainFrame::Delay(int milliseconds) {
 void MainFrame::ProcessTransaction(wxStaticBitmap* panel) {
 	panel->Hide();
 	processPanel->Show();
-	//plpay sound coressponding to transact
+
 	if (panel == depositPanel || panel == fundTransferPanel) {
 		wxSound insertMoneySound("sfx/deposit.wav");
 		insertMoneySound.Play();
@@ -1289,5 +1365,3 @@ void MainFrame::OnSuccess(wxStaticBitmap* panel) {
 
 	Layout();
 }
-
-

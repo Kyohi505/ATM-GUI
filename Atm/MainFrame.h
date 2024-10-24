@@ -1,5 +1,6 @@
 #pragma once
 #include <wx/wx.h>
+#include <wx/mediactrl.h>
 #include "Account.h"
 #include "FormatValidate.h"
 
@@ -14,7 +15,12 @@ private:
 	AtmSystem atm;
 	FormatValidate formatValidate;
 
-	void OnKeyPress(wxKeyEvent& event);
+	void OnIdleCheckUsb(wxIdleEvent& evt);
+	bool usbCheckEnabled = false;
+
+	void OnKeyPress(wxKeyEvent& evt);
+	
+	wxMediaCtrl* videoCtrl;
 
 	wxPanel* panel;
 	wxStaticBitmap* backgroundBitmap;
@@ -83,11 +89,12 @@ private:
 	void EnterAccount();
 	void OnEnterAccButtonClicked(wxCommandEvent& evt);
 	void OnInputEnterPin(wxCommandEvent& evt);
-
+	void OnPrintAccNum();
 	wxStaticBitmap* enterAccountPanel;
-	wxTextCtrl* enterAccNum;
+	wxStaticText* printAccNum;
 	wxTextCtrl* enterPin;
 	wxButton* enterAccButton;
+	
 	
 	//Main Menu
 	wxButton* balanceButton;
@@ -236,6 +243,6 @@ private:
 
 	//show acc after register
 	void ShowAccountInfo(const Account& account);
-
+	
 };
 

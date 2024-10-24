@@ -1,7 +1,9 @@
 #pragma once
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
 
 struct Account	
 {
@@ -51,4 +53,11 @@ public:
 	void storeAcc();
 	void loadAcc();
 
+	string checkUsb();
+	vector<string> getAvailableDrives();
+	string detectNewDrive(const vector<string>& detectedDrives);
+
+	void storePinToUSB(const string& usbDrive, const string& accNum, const string& pin);
+	bool checkRegisterUSB(const string& usbDrive);
+	string getAccNumUSB(const string& usbDrive);
 };

@@ -1,6 +1,9 @@
 #include "Account.h"
 #include <string>
 #include <fstream>
+#include <filesystem>
+#include <vector>
+#include <algorithm>
 
 int AtmSystem::createAccNumber()
 {
@@ -124,7 +127,7 @@ int AtmSystem::fundTransfer(string x, double y)
 void AtmSystem::storeAcc()
 {
 	Node* p = head;
-	std::ofstream file("pinCode.txt");
+	std::ofstream file("AccountList.txt");
 
 	while (p != NULL) {
 		file << p->data.name << "\n" << p->data.bday << " " << p->data.contact << " "
@@ -139,7 +142,7 @@ void AtmSystem::storeAcc()
 void AtmSystem::loadAcc()
 {
 
-	std::ifstream file("pinCode.txt");
+	std::ifstream file("AccountList.txt");
 	Account d;
 
 	while (std::getline(file, d.name)) {
@@ -163,6 +166,82 @@ void AtmSystem::loadAcc()
 		newNode->next = p;
 	}
 	file.close();
+}
+
+string AtmSystem::checkUsb()
+{
+	static vector<string> detectedDrives = getAvailableDrives();
+	string newDrive = detectNewDrive(detectedDrives);
+
+	if (!newDrive.empty()) {
+		return newDrive;
+	}
+
+	return "";
+}
+
+vector<string> AtmSystem::getAvailableDrives()
+{
+	vector<string> drives;
+
+	for (char drive = 'A'; drive <= 'Z'; drive++) {
+		std::string drivePath = std::string(1, drive) + ":\\";
+
+		if (std::filesystem::exists(drivePath) && std::filesystem::is_directory(drivePath)) {
+			drives.push_back(drivePath);
+		}
+	}
+
+	return drives;
+}
+
+string AtmSystem::detectNewDrive(const vector<string>& detectedDrives)
+{
+	std::vector<std::string> currentDrives = getAvailableDrives();
+
+	for (const auto& drive : currentDrives) {
+		if (std::find(detectedDrives.begin(), detectedDrives.end(), drive) == detectedDrives.end()) {
+			return drive;
+		}
+	}
+	return "";
+}
+
+void AtmSystem::storePinToUSB(const string& usbDrive, const string& accNum, const string& pin)
+{
+	string filePath = usbDrive + "pinCode.txt";
+	std::ofstream file(filePath);
+	if (file) {
+		file << accNum << "\n" << pin;
+		file.close();
+	}
+
+}
+
+bool AtmSystem::checkRegisterUSB(const string& usbDrive)
+{
+	string filePath = usbDrive + "pinCode.txt";
+
+	std::ifstream file(filePath);
+	if (file) {
+		file.close();
+		return true;
+	}
+	return false;
+}
+
+string AtmSystem::getAccNumUSB(const string& usbDrive)
+{
+	string filePath = usbDrive + "pinCode.txt";
+	string accNum;
+
+	std::ifstream file(filePath);
+	if (file) {
+		std::getline(file, accNum);
+		file.close();
+		return accNum;
+	}
+	return "";
 }
 
 string AtmSystem::getAccName()
@@ -217,3 +296,5 @@ int AtmSystem::changeAccPin(string currentPin, string newPin, string confirmedPi
 	}
 	
 }
+
+  
