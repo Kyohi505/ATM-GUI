@@ -3,5 +3,5 @@ Adam Cyrus Concepcion
 
 contributors:
 Jaynier Gonzaga,
-,Mico Tamaya
-,Julius Palaganas
+Mico Tamaya,
+Julius Palaganas
