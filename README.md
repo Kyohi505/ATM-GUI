@@ -2,6 +2,6 @@ Main Leader:
 Adam Cyrus Concepcion
 
 contributors:
-Jaynier Gonzaga
-Mico Tamaya
-Julius Palaganas
+Jaynier Gonzaga,
+,Mico Tamaya
+,Julius Palaganas
