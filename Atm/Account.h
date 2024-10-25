@@ -1,7 +1,10 @@
 #pragma once
 #include <string>
+#include <vector>
 
 using std::string;
+using std::vector;
+using std::getline;
 
 struct Account	
 {
@@ -11,6 +14,7 @@ struct Account
 	string accNum;
 	string pinCode;
 	double balance = 0;
+	string encryptedPin;
 };
 
 struct Node	
@@ -51,4 +55,14 @@ public:
 	void storeAcc();
 	void loadAcc();
 
+	string checkUsb();
+	vector<string> getAvailableDrives();
+	string detectNewDrive(const vector<string>& detectedDrives);
+
+	void storePinToUSB(const string& usbDrive, const string& accNum, const string& pin);
+	bool checkRegisterUSB(const string& usbDrive);
+	string getAccNumUSB(const string& usbDrive);
+
+	string key = "ilovedsa";
+	string decryptEncrypt(string pin, string key);
 };

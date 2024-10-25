@@ -1,6 +1,9 @@
 #include "Account.h"
 #include <string>
 #include <fstream>
+#include <filesystem>
+#include <vector>
+#include <algorithm>
 
 int AtmSystem::createAccNumber()
 {
@@ -124,12 +127,16 @@ int AtmSystem::fundTransfer(string x, double y)
 void AtmSystem::storeAcc()
 {
 	Node* p = head;
-	std::ofstream file("pinCode.txt");
+	std::ofstream file("AccountList.txt");
 
-	while (p != NULL) {
-		file << p->data.name << "\n" << p->data.bday << " " << p->data.contact << " "
-			<< p->data.balance << " " << p->data.accNum << " " << p->data.pinCode << '\n';
-
+	while (p != NULL)
+	{
+		file << p->data.name << '\n'
+			<< p->data.bday << '\n'
+			<< p->data.contact << '\n'
+			<< p->data.accNum << '\n'
+			<< p->data.balance << '\n'
+			<< p->data.encryptedPin << '\n';
 		p = p->next;
 	}
 
@@ -138,31 +145,111 @@ void AtmSystem::storeAcc()
 
 void AtmSystem::loadAcc()
 {
-
-	std::ifstream file("pinCode.txt");
+	std::ifstream file("AccountList.txt");
 	Account d;
 
-	while (std::getline(file, d.name)) {
-
-		file >> d.bday >> d.contact >> d.balance >> d.accNum >> d.pinCode;
+	while (getline(file, d.name) &&
+		getline(file, d.bday) &&
+		getline(file, d.contact) &&
+		getline(file, d.accNum) &&
+		file >> d.balance)
+	{
 		file.ignore();
+		getline(file, d.encryptedPin);
 
-		Node* p, * q, * newNode;
-		p = q = head;
-		newNode = new Node(d);
+		d.pinCode = decryptEncrypt(d.encryptedPin, key);
 
-		while (p != NULL) {
-			q = p;
-			p = p->next;
-		}
-
-		if (p == head)
-			head = newNode;
-		else
-			q->next = newNode;
-		newNode->next = p;
+		Node* p = new Node(d);
+		p->next = head;
+		head = p;
 	}
+
 	file.close();
+}
+
+string AtmSystem::checkUsb()
+{
+	static vector<string> detectedDrives = getAvailableDrives();
+	string newDrive = detectNewDrive(detectedDrives);
+
+	if (!newDrive.empty()) {
+		return newDrive;
+	}
+
+	return "";
+}
+
+vector<string> AtmSystem::getAvailableDrives()
+{
+	vector<string> drives;
+
+	for (char drive = 'A'; drive <= 'Z'; drive++) {
+		string drivePath = string(1, drive) + ":\\";
+
+		if (std::filesystem::exists(drivePath) && std::filesystem::is_directory(drivePath)) {
+			drives.push_back(drivePath);
+		}
+	}
+
+	return drives;
+}
+
+string AtmSystem::detectNewDrive(const vector<string>& detectedDrives)
+{
+	std::vector<std::string> currentDrives = getAvailableDrives();
+
+	for (const auto& drive : currentDrives) {
+		if (std::find(detectedDrives.begin(), detectedDrives.end(), drive) == detectedDrives.end()) {
+			return drive;
+		}
+	}
+	return "";
+}
+
+void AtmSystem::storePinToUSB(const string& usbDrive, const string& accNum, const string& pin)
+{
+	string filePath = usbDrive + "pinCode.txt";
+	std::ofstream file(filePath);
+	if (file) {
+		file << accNum << "\n" << pin;
+		file.close();
+	}
+
+}
+
+bool AtmSystem::checkRegisterUSB(const string& usbDrive)
+{
+	string filePath = usbDrive + "pinCode.txt";
+
+	std::ifstream file(filePath);
+	if (file) {
+		file.close();
+		return true;
+	}
+	return false;
+}
+
+string AtmSystem::getAccNumUSB(const string& usbDrive)
+{
+	string filePath = usbDrive + "pinCode.txt";
+	string accNum;
+
+	std::ifstream file(filePath);
+	if (file) {
+		getline(file, accNum);
+		file.close();
+		return accNum;
+	}
+	return "";
+}
+
+string AtmSystem::decryptEncrypt(string pin, string key)
+{
+	string result = pin;
+	for (size_t i = 0; i < pin.length(); i++) {
+		result[i] = pin[i] ^ key[i % key.length()];
+	}
+	return result;
 }
 
 string AtmSystem::getAccName()
@@ -202,8 +289,9 @@ void AtmSystem::changeAccContact(string x)
 
 int AtmSystem::changeAccPin(string currentPin, string newPin, string confirmedPin)
 {
-	
-	if (currentUser->data.pinCode != currentPin) {
+	string decryptedCurrentPin = decryptEncrypt(currentUser->data.encryptedPin, key);
+
+	if (decryptedCurrentPin != currentPin) {
 		return 0;
 	}
 
@@ -213,7 +301,13 @@ int AtmSystem::changeAccPin(string currentPin, string newPin, string confirmedPi
 
 	else if (currentUser->data.pinCode == currentPin && newPin == confirmedPin) {
 		currentUser->data.pinCode = newPin;
+		currentUser->data.encryptedPin = decryptEncrypt(newPin, key);
+
+		string currentDrive = checkUsb();
+		storePinToUSB(currentDrive, currentUser->data.accNum, currentUser->data.encryptedPin);
 		return 1;
 	}
 	
 }
+
+  
