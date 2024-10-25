@@ -295,11 +295,15 @@ int AtmSystem::changeAccPin(string currentPin, string newPin, string confirmedPi
 		return 0;
 	}
 
-	else if (currentUser->data.pinCode == currentPin && newPin != confirmedPin) {
+	else if (decryptedCurrentPin == currentPin && newPin != confirmedPin) {
 		return -1;
 	}
 
-	else if (currentUser->data.pinCode == currentPin && newPin == confirmedPin) {
+	else if (decryptedCurrentPin == currentPin && decryptedCurrentPin == newPin && decryptedCurrentPin == confirmedPin) {
+		return -2;
+	}
+
+	else if (decryptedCurrentPin == currentPin && newPin == confirmedPin) {
 		currentUser->data.pinCode = newPin;
 		currentUser->data.encryptedPin = decryptEncrypt(newPin, key);
 

@@ -12,7 +12,7 @@ MainFrame::MainFrame(const wxString& title) : wxFrame(nullptr, wxID_ANY, title, 
 {
 	CreateControls();
 	BindEventHandlers();
-	atm.loadAcc();
+	atm.loadAcc();	
 }
 
 void MainFrame::CreateControls()
@@ -655,7 +655,7 @@ void MainFrame::OnCancelRegisterClicked(wxCommandEvent& evt)
 	registerContact->Clear();
 	registerPin->Clear();
 
-	enterAccountPanel->Show();
+	noOperationPanel->Show();
 	Layout();
 }
 
@@ -876,6 +876,7 @@ void MainFrame::DepositMoney()
 	if (amount > 0) {
 		atm.deposit(amount);
 		inputDeposit->Clear();
+		atm.storeAcc();
 		ProcessTransaction(depositPanel);
 	}
 	else {
@@ -949,6 +950,7 @@ void MainFrame::WithdrawMoney()
 	else {
 		if (amount <= currentBalance) {
 			atm.withdraw(amount);
+			atm.storeAcc();
 			ProcessTransaction(withdrawPanel);
 			inputWithdraw->Clear();
 		}
@@ -1019,7 +1021,7 @@ void MainFrame::TransferMoney()
 		else if (successfulTransfer == 1) {
 			inputAccTransfer->Clear();
 			inputAmountTransfer->Clear();
-
+			atm.storeAcc();
 			ProcessTransaction(fundTransferPanel);
 			Layout();
 		}
@@ -1127,7 +1129,7 @@ void MainFrame::UpdateInformation()
 	}
 
 	wxString contact = changeContactInput->GetValue();
-	if (contact.Length() < 13) {
+	if (!changeContactInput->IsEmpty() && contact.Length() < 13) {
 		changeContactInput->SetBackgroundColour(*wxRED);
 		changeContactInput->Clear();
 		return;
@@ -1223,7 +1225,7 @@ void MainFrame::UpdatePin()
 		wxLogMessage("Incomplete Input");
 	}
 
-	if (newPinL.length() < 4 && confirmPinL.length() < 4) {
+	if (newPinL.length() < 4 || confirmPinL.length() < 4) {
 		wxLogMessage("Invalid Pin");
 		return;
 	}
@@ -1234,6 +1236,38 @@ void MainFrame::UpdatePin()
 		string confirmPin = inputConfirmNewPin->GetValue().ToStdString();
 
 		int confirm = atm.changeAccPin(currentPin, newPin, confirmPin);
+
+		if (confirm == 0 || currentPinL.length() < 4) {
+			inputCurrentPin->SetBackgroundColour(*wxRED);
+			inputCurrentPin->Clear();
+			inputCurrentPin->Refresh();
+		}
+
+		if (confirm == -1 || newPinL.length() < 4 && confirmPinL.length() < 4) {
+			inputConfirmNewPin->SetBackgroundColour(*wxRED);
+			inputConfirmNewPin->Clear();
+			inputConfirmNewPin->Refresh();
+
+			inputNewPin->SetBackgroundColour(*wxRED);
+			inputNewPin->Clear();
+			inputNewPin->Refresh();
+		}
+
+		if (confirm == -2) {
+			inputCurrentPin->SetBackgroundColour(*wxRED);
+			inputCurrentPin->Clear();
+			inputCurrentPin->Refresh();
+
+			inputConfirmNewPin->SetBackgroundColour(*wxRED);
+			inputConfirmNewPin->Clear();
+			inputConfirmNewPin->Refresh();
+
+			inputNewPin->SetBackgroundColour(*wxRED);
+			inputNewPin->Clear();
+			inputNewPin->Refresh();
+
+			wxLogMessage("This is already your pin!");
+		}
 
 		if (confirm == 1) {
 			changePinPanel->Hide();
@@ -1246,26 +1280,11 @@ void MainFrame::UpdatePin()
 
 			inputConfirmNewPin->Clear();
 			inputConfirmNewPin->SetBackgroundColour(wxColor(248, 247, 255));
-
+			atm.storeAcc();
 			mainPanel->Show();
 			Layout();
 		}
 
-		else if (confirm == 0 && currentPinL.length() < 4) {
-			inputCurrentPin->SetBackgroundColour(*wxRED);
-			inputCurrentPin->Clear();
-			inputCurrentPin->Refresh();
-		}
-
-		else if (confirm == -1 && newPinL.length() < 4 && confirmPinL.length() < 4) {
-			inputConfirmNewPin->SetBackgroundColour(*wxRED);
-			inputConfirmNewPin->Clear();
-			inputConfirmNewPin->Refresh();
-
-			inputNewPin->SetBackgroundColour(*wxRED);
-			inputNewPin->Clear();
-			inputNewPin->Refresh();
-		}
 	}
 }
 
